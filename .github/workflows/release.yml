@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag rilis yang sudah ada (mis. v0.2.0-beta)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package and publish
+    runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: windows/**/*.csproj
+
+      - name: Resolve version from tag
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          if ($version -notmatch '^\d+\.\d+\.\d+') { throw "Tag bukan versi SemVer: $env:RELEASE_TAG" }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Versi rilis: $version"
+
+      - name: Test
+        run: >
+          dotnet test windows/DynamicIsland.Core.Tests/DynamicIsland.Core.Tests.csproj
+          -c Release
+
+      - name: Publish (framework-dependent)
+        shell: pwsh
+        run: >
+          dotnet publish windows/DynamicIsland.App/DynamicIsland.App.csproj
+          -c Release -r win-x64 --self-contained false
+          -p:Version=$env:VERSION
+          -o artifacts/framework-dependent
+
+      - name: Publish (self-contained)
+        shell: pwsh
+        run: >
+          dotnet publish windows/DynamicIsland.App/DynamicIsland.App.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:Version=$env:VERSION
+          -o artifacts/self-contained
+
+      - name: Package zip and checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+
+          $targets = @(
+            @{ Dir = "artifacts/framework-dependent"; Name = "DynamicIsland-$version-win-x64" },
+            @{ Dir = "artifacts/self-contained"; Name = "DynamicIsland-$version-win-x64-selfcontained" }
+          )
+
+          foreach ($target in $targets) {
+            foreach ($doc in @("README.md", "CHANGELOG.md", "LICENSE")) {
+              Copy-Item $doc -Destination $target.Dir
+            }
+
+            $zip = Join-Path "dist" ($target.Name + ".zip")
+            Compress-Archive -Path (Join-Path $target.Dir "*") -DestinationPath $zip -Force
+
+            $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+            # LF supaya bisa diverifikasi dengan `sha256sum -c` di semua platform.
+            [System.IO.File]::WriteAllText(
+              ($zip + ".sha256"),
+              "$hash  $($target.Name).zip`n",
+              [System.Text.Encoding]::ASCII)
+            Write-Host "Paket: $zip"
+          }
+
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $arguments = @(
+            "release", "create", $env:RELEASE_TAG,
+            "--title", "Dynamic Island $env:VERSION",
+            "--generate-notes", "--verify-tag"
+          )
+          if ($env:VERSION -match "-") { $arguments += "--prerelease" }
+          $arguments += (Get-ChildItem dist -Filter *.zip | ForEach-Object FullName)
+          $arguments += (Get-ChildItem dist -Filter *.sha256 | ForEach-Object FullName)
+          gh @arguments

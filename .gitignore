@@ -1,0 +1,30 @@
+# Build hasil kompilasi
+bin/
+obj/
+artifacts/
+dist/
+TestResults/
+*.trx
+
+# IDE dan alat
+.vs/
+.vscode/
+*.user
+*.suo
+*.DotSettings.user
+
+# Berkas rilis lokal
+*.zip
+*.sha256
+*.nupkg
+publish/
+
+# Log
+*.log
+
+# Berkas pihak ketiga (unduhan referensi, bukan bagian repo)
+Reference/
+
+# OS
+.DS_Store
+Thumbs.db

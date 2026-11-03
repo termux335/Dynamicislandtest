@@ -1,0 +1,9 @@
+<Application x:Class="DynamicIsland.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnLastWindowClose">
+    <Application.Resources>
+        <!-- Aksen bawaan; diganti saat pengguna memilih warna lain (lihat Theme.cs). -->
+        <SolidColorBrush x:Key="AccentBrush" Color="#FFFF9F43" />
+    </Application.Resources>
+</Application>

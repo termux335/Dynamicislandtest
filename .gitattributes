@@ -1,2 +1,20 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Normalisasi akhir baris: repo menyimpan LF, checkout Windows memakai LF juga
+# supaya skrip bash dan teks .cs/.md tetap konsisten.
+* text=auto eol=lf
+
+# PowerShell 5.1 paling aman dengan CRLF.
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.cmd text eol=crlf
+
+# Berkas biner: jangan pernah diubah.
+*.png binary
+*.ico binary
+*.exe binary
+*.dll binary
+*.apk binary
+*.dmg binary
+
+# Artefak rilis tidak ikut dihitung sebagai teks.
+*.zip binary
+*.sha256 text

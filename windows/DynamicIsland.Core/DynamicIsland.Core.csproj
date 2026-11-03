@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>DynamicIsland.Core</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Berkas string ditanam di assembly supaya app dan tes membaca sumber yang sama.
+       Namanya sengaja "indonesia/english", bukan "id/en": MSBuild membaca akhiran
+       seperti ".id" sebagai kode budaya dan memindahkan berkasnya ke satelit. -->
+  <ItemGroup>
+    <EmbeddedResource Include="strings-indonesia.json" LogicalName="DynamicIsland.Core.strings.indonesia.json" />
+    <EmbeddedResource Include="strings-english.json" LogicalName="DynamicIsland.Core.strings.english.json" />
+  </ItemGroup>
+
+</Project>

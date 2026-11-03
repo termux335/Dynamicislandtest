@@ -1,0 +1,74 @@
+# Gaya kode untuk Dynamic Island. Aturan ini mengikuti gaya yang sudah dipakai
+# di windows/: file-scoped namespace, nullable aktif, 4 spasi, kurung kurawal
+# pada baris baru.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{csproj,props,targets,slnx,xaml,manifest}]
+indent_size = 2
+
+[*.cs]
+# Namespace
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# Var dan tipe eksplisit: pakai var hanya bila tipe jelas dari sisi kanan.
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Anggota expression-bodied
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+
+# Nullable
+csharp_style_throw_expression = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+
+# Kurung kurawal selalu ada, termasuk blok satu baris.
+csharp_prefer_braces = true:warning
+
+# using di luar namespace (gaya file yang ada).
+csharp_using_directive_placement = outside_namespace:warning
+
+# Penamaan privat: camelCase dengan garis bawah di depan tidak dipakai di repo ini.
+dotnet_naming_rule.private_fields_are_camel_case.severity = warning
+dotnet_naming_rule.private_fields_are_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_are_camel_case.style = camel_case
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.camel_case.required_prefix =
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+# Tes memakai nama metode yang menjelaskan perilaku.
+[windows/DynamicIsland.Core.Tests/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+
+# ActivityQueue bukan turunan System.Collections.Queue: namanya menyebut peran
+# domainnya (antrean prioritas di shared/SPEC.md). CA1711 hanya soal akhiran
+# nama, jadi dimatikan khusus di berkas ini, bukan untuk seluruh proyek.
+[windows/DynamicIsland.Core/ActivityQueue.cs]
+dotnet_diagnostic.CA1711.severity = none
+
+# Properti di bawah ini dibaca lewat binding WPF ({Binding ...}); membuatnya
+# static akan memutus binding, jadi CA1822 tidak berlaku untuk file ini.
+[windows/DynamicIsland.App/IslandViewModel.cs]
+dotnet_diagnostic.CA1822.severity = none
+
+# Tes sengaja memakai array inline di Assert.Equal agar skenario terbaca
+# utuh di satu tempat; alokasinya tidak relevan untuk kode tes.
+[windows/DynamicIsland.Core.Tests/*.cs]
+dotnet_diagnostic.CA1861.severity = none

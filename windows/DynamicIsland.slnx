@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DynamicIsland.App/DynamicIsland.App.csproj" />
+  <Project Path="DynamicIsland.Core.Tests/DynamicIsland.Core.Tests.csproj" />
+  <Project Path="DynamicIsland.Core/DynamicIsland.Core.csproj" />
+</Solution>
