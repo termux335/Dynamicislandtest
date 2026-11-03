@@ -126,7 +126,7 @@ public sealed class IslandViewModel : INotifyPropertyChanged
     /// <summary>Saklar fitur dua kapsul (Tahap 3) di menu klik kanan.</summary>
     public bool ShowsSecondary => controller.ShowsSecondary;
 
-    public string SecondaryGlyph => Secondary is null ? string.Empty : Glyphs.For(Secondary.Kind);
+    public string SecondaryGlyph => Secondary?.Id == AgentMonitor.ActivityId ? "\u2728" : Secondary is null ? string.Empty : Glyphs.For(Secondary.Kind);
 
     public double SecondaryWidth => IslandMetrics.SecondaryFor(presentation.Mode).Width;
 
@@ -592,6 +592,16 @@ public sealed class IslandViewModel : INotifyPropertyChanged
 
     public string LabelAgentStatusNote => text.Get("settings.agentStatusNote");
 
+    public bool IsClaudeHookInstalled => ClaudeHookManager.IsInstalled();
+
+    public string LabelClaudeHookStatus => text.Get(IsClaudeHookInstalled ? "settings.claudeHookInstalled" : "settings.claudeHookNotInstalled");
+
+    public string LabelClaudeHookButton => text.Get(IsClaudeHookInstalled ? "settings.uninstallClaudeHook" : "settings.installClaudeHook");
+
+    public string LabelClaudeHookTest => text.Get("settings.testClaudeHook");
+
+    public void RefreshClaudeHookStatus() => RaiseAll();
+
     public string LabelTerminal => text.Get("settings.terminal");
 
     public string LabelTerminalNote => text.Get("settings.terminalNote");
@@ -782,7 +792,7 @@ public sealed class IslandViewModel : INotifyPropertyChanged
             : $"{(int)span.TotalMinutes}:{span.Seconds:00}";
     }
 
-    public string Glyph => Primary is null ? string.Empty : Glyphs.For(Primary.Kind);
+    public string Glyph => Primary?.Id == AgentMonitor.ActivityId ? "\u2728" : Primary is null ? string.Empty : Glyphs.For(Primary.Kind);
 
     /// <summary>Aksi aktivitas plus dua pintasan aplikasi di kartu expanded.</summary>
     public IReadOnlyList<ActivityAction> Actions =>

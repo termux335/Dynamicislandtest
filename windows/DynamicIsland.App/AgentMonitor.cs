@@ -1,21 +1,24 @@
+using System.IO;
 using System.Windows.Threading;
 using DynamicIsland.Core;
 
 namespace DynamicIsland.App;
 
 /// <summary>
-/// Status agen AI coding (Tahap 5c): membaca JSON lokal, tidak memanggil
-/// jaringan dan tidak menyimpan kunci API. Setuju/tolak hanya menulis satu
-/// berkas jawaban di sebelah status.
+/// Status agen AI coding (seperti Coucou): membaca JSON lokal, bereaksi instan
+/// lewat FileSystemWatcher, dan menampilkan kartu persetujuan interaktif (1-click approve/deny).
+/// Tanpa kunci API dan tanpa panggilan internet eksternal.
 /// </summary>
 public sealed class AgentMonitor : IDisposable
 {
     public const string ActivityId = "agent-status";
 
     private readonly IslandController controller;
+    private readonly Dispatcher dispatcher;
     private readonly DispatcherTimer timer;
     private readonly IslandText text;
     private readonly string path;
+    private FileSystemWatcher? watcher;
 
     private string? last;
     private AgentSnapshot? current;
@@ -23,6 +26,7 @@ public sealed class AgentMonitor : IDisposable
     public AgentMonitor(IslandController controller, Dispatcher dispatcher, IslandText? text = null, string? path = null)
     {
         this.controller = controller;
+        this.dispatcher = dispatcher;
         this.text = text ?? IslandText.Default;
         this.path = path ?? AgentStatusFile.DefaultPath;
 
@@ -31,11 +35,18 @@ public sealed class AgentMonitor : IDisposable
             DispatcherPriority.Background,
             (_, _) => Poll(),
             dispatcher);
+
+        InitWatcher();
     }
 
     public bool Enabled { get; set; }
 
-    public void Start() => timer.Start();
+    public void Start()
+    {
+        timer.Start();
+        if (watcher is not null) watcher.EnableRaisingEvents = true;
+        Poll();
+    }
 
     public void Respond(bool approved)
     {
@@ -58,10 +69,41 @@ public sealed class AgentMonitor : IDisposable
     public void Dispose()
     {
         timer.Stop();
+        if (watcher is not null)
+        {
+            watcher.EnableRaisingEvents = false;
+            watcher.Dispose();
+            watcher = null;
+        }
         controller.Remove(ActivityId);
     }
 
-    private void Poll()
+    private void InitWatcher()
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir))
+            {
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+                watcher = new FileSystemWatcher(dir, Path.GetFileName(path))
+                {
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
+                };
+
+                watcher.Changed += (_, _) => _ = dispatcher.BeginInvoke(Poll);
+                watcher.Created += (_, _) => _ = dispatcher.BeginInvoke(Poll);
+                watcher.Deleted += (_, _) => _ = dispatcher.BeginInvoke(Poll);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Write($"agen: watcher gagal dimulai ({ex.Message})");
+        }
+    }
+
+    public void Poll()
     {
         if (!Enabled)
         {
@@ -88,6 +130,17 @@ public sealed class AgentMonitor : IDisposable
             return;
         }
 
+        if (snapshot.State is "idle" && snapshot.Request is null)
+        {
+            if (last is not null)
+            {
+                last = null;
+                current = null;
+                controller.Remove(ActivityId);
+            }
+            return;
+        }
+
         var key = $"{snapshot.Tool}|{snapshot.State}|{snapshot.Used}|{snapshot.Limit}|{snapshot.Request?.Id}|{snapshot.Request?.Summary}";
         if (key == last) return;
 
@@ -98,12 +151,13 @@ public sealed class AgentMonitor : IDisposable
 
     private Activity Build(AgentSnapshot snapshot)
     {
-        var actions = snapshot.Request is null
+        var hasRequest = snapshot.Request is not null;
+        var actions = !hasRequest
             ? Array.Empty<ActivityAction>()
             : new[]
             {
-                new ActivityAction("agent.approve", text.Get("agent.approve"), "check"),
-                new ActivityAction("agent.reject", text.Get("agent.reject"), "close"),
+                new ActivityAction("agent.approve", "✓ " + text.Get("agent.approve"), "check"),
+                new ActivityAction("agent.reject", "✕ " + text.Get("agent.reject"), "close"),
             };
 
         var state = snapshot.State switch
@@ -122,11 +176,12 @@ public sealed class AgentMonitor : IDisposable
         return new Activity(
             id: ActivityId,
             kind: ActivityKind.Notification,
-            priority: 93,
+            priority: hasRequest ? 98 : 93,
             title: $"{snapshot.Tool} · {state}",
             subtitle: subtitle,
             actions: actions,
+            caption: snapshot.Request?.Detail ?? snapshot.Request?.Summary,
             isLive: true,
-            state: ActivityState.Compact);
+            state: hasRequest ? ActivityState.Expanded : ActivityState.Compact);
     }
 }

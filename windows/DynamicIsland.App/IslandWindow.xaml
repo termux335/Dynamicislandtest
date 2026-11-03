@@ -231,6 +231,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -250,11 +251,17 @@
                                Visibility="{Binding HasSubtitle, Converter={StaticResource BoolToVisibility}}" />
                 </Grid>
 
-                <ProgressBar Grid.Row="1" Style="{StaticResource TrackStyle}" Height="3" Margin="0,8,0,0"
+                <Border Grid.Row="1" Background="#1FFFFFFF" CornerRadius="8" Padding="10,6" Margin="0,8,0,0"
+                        Visibility="{Binding HasCaption, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding Caption}" Foreground="#00FFCC" FontFamily="Consolas, Cascadia Code, Courier New"
+                               FontSize="12" TextTrimming="CharacterEllipsis" />
+                </Border>
+
+                <ProgressBar Grid.Row="2" Style="{StaticResource TrackStyle}" Height="3" Margin="0,8,0,0"
                              Value="{Binding ProgressPercent, Mode=OneWay}"
                              Visibility="{Binding HasProgress, Converter={StaticResource BoolToVisibility}}" />
 
-                <ItemsControl Grid.Row="2" ItemsSource="{Binding Actions}" Margin="0,10,0,0"
+                <ItemsControl Grid.Row="3" ItemsSource="{Binding Actions}" Margin="0,10,0,0"
                               VerticalAlignment="Bottom"
                               Visibility="{Binding HasActions, Converter={StaticResource BoolToVisibility}}">
                     <ItemsControl.ItemsPanel>

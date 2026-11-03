@@ -1,3 +1,5 @@
+using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -365,6 +367,60 @@ public partial class SettingsWindow : Window
     private void AgentStatus_Changed(object sender, RoutedEventArgs e)
     {
         if (ready) model.AgentStatusEnabled = AgentStatusCheck.IsChecked == true;
+    }
+
+    private void ClaudeHook_Click(object sender, RoutedEventArgs e)
+    {
+        if (ClaudeHookManager.IsInstalled())
+        {
+            var (success, msg) = ClaudeHookManager.Uninstall();
+            if (success)
+            {
+                model.RefreshClaudeHookStatus();
+            }
+            else
+            {
+                MessageBox.Show(this, msg, "Dynamic Island", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        else
+        {
+            ClaudeHookManager.DeployHookScripts();
+            var (success, msg) = ClaudeHookManager.Install();
+            if (success)
+            {
+                model.RefreshClaudeHookStatus();
+            }
+            else
+            {
+                MessageBox.Show(this, msg, "Dynamic Island", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+    }
+
+    private static readonly JsonSerializerOptions JsonWriteOptions = new() { WriteIndented = true };
+
+    private void ClaudeHookTest_Click(object sender, RoutedEventArgs e)
+    {
+        var dir = ClaudeHookManager.DefaultHooksDirectory;
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+        var statusPath = Path.Combine(dir, "agent-status.json");
+        var reqId = "test-" + Guid.NewGuid().ToString("N")[..6];
+        var testStatus = new
+        {
+            tool = "Claude Code",
+            state = "waiting",
+            request = new
+            {
+                id = reqId,
+                summary = "Bash: git push origin main",
+                detail = "git push origin main"
+            },
+            updated_at = DateTimeOffset.Now.ToString("o")
+        };
+
+        File.WriteAllText(statusPath, JsonSerializer.Serialize(testStatus, JsonWriteOptions));
     }
 
     private void Terminal_Changed(object sender, RoutedEventArgs e)

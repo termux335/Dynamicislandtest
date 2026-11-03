@@ -175,6 +175,15 @@
 
             <CheckBox x:Name="AgentStatusCheck" Content="{Binding LabelAgentStatus}" Checked="AgentStatus_Changed" Unchecked="AgentStatus_Changed" />
             <TextBlock Text="{Binding LabelAgentStatusNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+            <StackPanel x:Name="ClaudeHookPanel" Margin="24,6,0,0" Visibility="{Binding ElementName=AgentStatusCheck, Path=IsChecked, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock x:Name="ClaudeHookStatusText" Text="{Binding LabelClaudeHookStatus}" Style="{StaticResource Muted}" />
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                    <Button x:Name="ClaudeHookButton" Style="{StaticResource PillButton}" Height="32" Padding="12,0"
+                            Content="{Binding LabelClaudeHookButton}" Click="ClaudeHook_Click" />
+                    <Button x:Name="ClaudeHookTestButton" Style="{StaticResource PillButton}" Height="32" Padding="12,0" Margin="8,0,0,0"
+                            Content="{Binding LabelClaudeHookTest}" Click="ClaudeHookTest_Click" />
+                </StackPanel>
+            </StackPanel>
 
             <CheckBox x:Name="TerminalCheck" Content="{Binding LabelTerminal}" Margin="0,14,0,0" Checked="Terminal_Changed" Unchecked="Terminal_Changed" />
             <TextBlock Text="{Binding LabelTerminalNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
