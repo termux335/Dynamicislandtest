@@ -163,5 +163,45 @@
   "settings.oled": { "serius": "OLED screen protection", "kocak": "OLED screen care" },
   "settings.weather": { "serius": "BMKG weather alerts (needs internet)", "kocak": "BMKG weather (needs internet)" },
   "settings.weatherNote": { "serius": "Off by default. When enabled, the app asks for confirmation and uses the ADM4 code from the settings file.", "kocak": "Off by default. Turn it on and the app asks first, then uses your ADM4 code." },
-  "settings.weatherUnavailable": { "serius": "No BMKG ADM4 code yet. Add “WeatherAdm4” to settings.json to use this feature.", "kocak": "No BMKG ADM4 code yet. Add “WeatherAdm4” to settings.json first." }
+  "settings.weatherUnavailable": { "serius": "No BMKG ADM4 code yet. Add “WeatherAdm4” to settings.json to use this feature.", "kocak": "No BMKG ADM4 code yet. Add “WeatherAdm4” to settings.json first." },
+
+  "osd.volume": { "serius": "Volume", "kocak": "Sound" },
+  "osd.brightness": { "serius": "Brightness", "kocak": "Brightness" },
+  "osd.mute": { "serius": "Microphone", "kocak": "Mic" },
+  "osd.muted": { "serius": "Muted", "kocak": "Muted" },
+
+  "palette.title": { "serius": "Quick commands", "kocak": "What do you need?" },
+  "palette.placeholder": { "serius": "Type a command, calculation, or app name", "kocak": "Type a command, sum, or app" },
+  "palette.empty": { "serius": "No results", "kocak": "Nothing. Try another word." },
+  "palette.copy": { "serius": "Copy result", "kocak": "Grab the result" },
+  "palette.hint": { "serius": "Ctrl+Alt+V to open · Esc to close · Enter to run", "kocak": "Ctrl+Alt+V opens · Esc closes · Enter runs" },
+  "menu.palette": { "serius": "Quick commands", "kocak": "Command palette" },
+  "menu.clipboard": { "serius": "Clipboard history", "kocak": "Clipboard memory" },
+  "menu.clipboardClear": { "serius": "Clear clipboard history", "kocak": "Forget the clipboard" },
+  "menu.camera": { "serius": "Camera mirror", "kocak": "Check the face" },
+  "menu.shortcuts": { "serius": "App shortcuts", "kocak": "Favourite apps" },
+
+  "clipboard.title": { "serius": "Clipboard history", "kocak": "Clipboard memory" },
+  "clipboard.empty": { "serius": "Nothing copied yet", "kocak": "Nothing stuck yet" },
+  "clipboard.redacted": { "serius": "Redacted", "kocak": "Redacted" },
+  "clipboard.cleared": { "serius": "Clipboard history cleared", "kocak": "Clipboard forgotten" },
+  "clipboard.image": { "serius": "Image copied", "kocak": "Image stuck" },
+  "clipboard.ocrTitle": { "serius": "Text from image", "kocak": "Read from image" },
+  "clipboard.ocrFailed": { "serius": "OCR is not available on this device", "kocak": "OCR is not available" },
+
+  "camera.title": { "serius": "Camera mirror", "kocak": "Check your look" },
+  "camera.active": { "serius": "Camera on · turns off when the island collapses", "kocak": "Camera on · off when the capsule collapses" },
+  "camera.denied": { "serius": "Camera could not start: {0}. Enable camera access in Windows Settings.", "kocak": "Camera refused: {0}. Turn on camera access in Windows Settings." },
+  "camera.close": { "serius": "Close", "kocak": "Close" },
+
+  "settings.clipboard": { "serius": "Safe clipboard history", "kocak": "Clipboard memory" },
+  "settings.clipboardNote": { "serius": "Memory only, at most 30 entries and 24 hours. Passwords, tokens, and card numbers are redacted before storage.", "kocak": "Memory only, 30 entries and 24 hours max. Passwords, tokens, and cards are redacted first." },
+  "settings.palette": { "serius": "Command palette (Ctrl+Alt+V)", "kocak": "Command palette (Ctrl+Alt+V)" },
+  "settings.osd": { "serius": "Volume and brightness display", "kocak": "Sound and brightness display" },
+  "settings.osdNote": { "serius": "Shows the capsule when volume/brightness changes. The Windows OSD remains; this module can be turned off.", "kocak": "Capsule shows when volume/brightness changes. Windows OSD stays; this can be turned off." },
+  "settings.mirror": { "serius": "Camera mirror", "kocak": "Check your look" },
+  "settings.mirrorNote": { "serius": "A short preview to check your appearance. The camera stops when the preview closes or the island collapses; nothing is saved.", "kocak": "Short preview to check your look. Camera stops when closed or the capsule collapses; nothing saved." },
+  "settings.shortcuts": { "serius": "App and folder shortcuts", "kocak": "Favourite apps and folders" },
+  "settings.shortcutsNote": { "serius": "Only paths you register yourself, stored in shortcuts.json. Nothing is executed from outside sources.", "kocak": "Only paths you add yourself in shortcuts.json. Nothing from outside runs." },
+  "settings.modulesNote": { "serius": "Every Stage 5 module has its own switch and does not slow the others down.", "kocak": "Every module has its own switch and does not slow the rest." }
 }

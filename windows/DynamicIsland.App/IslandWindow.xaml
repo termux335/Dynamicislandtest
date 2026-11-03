@@ -61,6 +61,12 @@
             <MenuItem Header="{Binding MenuSafeShare}" IsCheckable="True" IsChecked="{Binding SafeShare, Mode=OneWay}" Click="SafeShare_Click" />
             <MenuItem Header="{Binding MenuStudy}" IsCheckable="True" IsChecked="{Binding StudyMode, Mode=OneWay}" Click="Study_Click" />
             <Separator />
+            <MenuItem Header="{Binding MenuPalette}" Click="Palette_Click" />
+            <MenuItem Header="{Binding MenuClipboard}" Click="Clipboard_Click" />
+            <MenuItem Header="{Binding MenuClipboardClear}" Click="ClipboardClear_Click" />
+            <MenuItem Header="{Binding MenuCamera}" IsEnabled="{Binding MirrorEnabled, Mode=OneWay}" Click="Camera_Click" />
+            <MenuItem Header="{Binding MenuShortcuts}" Click="Shortcuts_Click" />
+            <Separator />
             <Separator />
             <MenuItem Header="{Binding MenuSettings}" Click="Settings_Click" />
             <MenuItem Header="{Binding MenuQuit}" Click="Quit_Click" />

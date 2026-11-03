@@ -23,10 +23,11 @@ DynamicIsland.Core (net8.0, tanpa UI)
   ├── Placement, Customization, Meetings, Settings
   ├── ContextAwareness, SafePlacement, AppProfiles   mode tidak mengganggu
   ├── Scenarios, Habits, PrayerTimes, WeatherAlert, OledGuard
+  ├── ClipboardSafety, Calculator, Palette, Osd   modul Tahap 5a
   └── Strings, Lyrics, LyricsFiles
         ▲
         │ dites oleh
-DynamicIsland.Core.Tests (xunit, 216 tes)
+DynamicIsland.Core.Tests (xunit, 245 tes)
 ```
 
 Aturan pemisahan: **Core tidak boleh menyentuh WPF atau P/Invoke.** Semua yang
@@ -113,6 +114,9 @@ Saklar modul (konteks, berbagi aman, kebiasaan, salat, cuaca, OLED) disimpan di
 | `ContextAwarenessTests`, `ContextControllerTests` | klasifikasi konteks, tingkat respons, tahan 3 detik, penyaringan kritis |
 | `SafePlacementTests` | urutan posisi aman, zona terlarang, dodge kursor, profil aplikasi |
 | `Stage4ModuleTests` | skenario, kebiasaan, jadwal salat, BMKG, pelindung OLED |
+| `ClipboardSafetyTests` | penyamaran kartu/Luhn/password/token, retensi, pencarian |
+| `CalculatorTests`, `PaletteTests` | aritmetika, persen, konversi satuan, pencarian palette |
+| `OsdTests` | format dan throttle tampilan volume/kecerahan |
 
 Menambah perilaku baru berarti menambah tes di salah satu berkas ini; tes
 prioritas dan transisi state wajib ada sebelum UI-nya.

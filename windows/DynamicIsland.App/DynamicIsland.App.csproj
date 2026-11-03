@@ -8,6 +8,8 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>DynamicIsland.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Pratinjau kamera menyalin piksel BGRA langsung dari buffer WinRT. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

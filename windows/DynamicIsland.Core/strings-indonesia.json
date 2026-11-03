@@ -164,5 +164,45 @@
   "settings.oled": { "serius": "Pelindung layar OLED", "kocak": "Jaga layar OLED" },
   "settings.weather": { "serius": "Peringatan cuaca BMKG (butuh internet)", "kocak": "Info cuaca BMKG (perlu internet)" },
   "settings.weatherNote": { "serius": "Mati secara bawaan. Saat dinyalakan, app meminta konfirmasi dan memakai kode ADM4 dari berkas pengaturan.", "kocak": "Default mati. Kalau dinyalakan, app minta izin dulu dan pakai kode ADM4 dari file pengaturan." },
-  "settings.weatherUnavailable": { "serius": "Kode ADM4 BMKG belum diisi. Tambahkan “WeatherAdm4” di settings.json untuk memakai fitur ini.", "kocak": "Kode ADM4 BMKG belum ada. Isi “WeatherAdm4” di settings.json dulu." }
+  "settings.weatherUnavailable": { "serius": "Kode ADM4 BMKG belum diisi. Tambahkan “WeatherAdm4” di settings.json untuk memakai fitur ini.", "kocak": "Kode ADM4 BMKG belum ada. Isi “WeatherAdm4” di settings.json dulu." },
+
+  "osd.volume": { "serius": "Volume", "kocak": "Suara" },
+  "osd.brightness": { "serius": "Kecerahan", "kocak": "Terangnya" },
+  "osd.mute": { "serius": "Mikrofon", "kocak": "Mic" },
+  "osd.muted": { "serius": "Bisu", "kocak": "Dibisukan" },
+
+  "palette.title": { "serius": "Perintah cepat", "kocak": "Mau apa, bos?" },
+  "palette.placeholder": { "serius": "Ketik perintah, hitungan, atau nama aplikasi", "kocak": "Ketik perintah, hitungan, atau nama app" },
+  "palette.empty": { "serius": "Tidak ada hasil", "kocak": "Kosong. Coba kata lain." },
+  "palette.copy": { "serius": "Salin hasil", "kocak": "Comot hasilnya" },
+  "palette.hint": { "serius": "Ctrl+Alt+V untuk membuka · Esc menutup · Enter menjalankan", "kocak": "Ctrl+Alt+V buat buka · Esc tutup · Enter jalan" },
+  "menu.palette": { "serius": "Perintah cepat", "kocak": "Palet perintah" },
+  "menu.clipboard": { "serius": "Riwayat clipboard", "kocak": "Ingatan clipboard" },
+  "menu.clipboardClear": { "serius": "Hapus riwayat clipboard", "kocak": "Lupakan clipboard" },
+  "menu.camera": { "serius": "Cermin kamera", "kocak": "Cek tampang" },
+  "menu.shortcuts": { "serius": "Pintasan aplikasi", "kocak": "App langganan" },
+
+  "clipboard.title": { "serius": "Riwayat clipboard", "kocak": "Ingatan clipboard" },
+  "clipboard.empty": { "serius": "Belum ada yang disalin", "kocak": "Belum ada yang nyangkut" },
+  "clipboard.redacted": { "serius": "Disamarkan", "kocak": "Disensor" },
+  "clipboard.cleared": { "serius": "Riwayat clipboard dihapus", "kocak": "Clipboard dilupakan" },
+  "clipboard.image": { "serius": "Gambar disalin", "kocak": "Gambar nyangkut" },
+  "clipboard.ocrTitle": { "serius": "Teks dari gambar", "kocak": "Baca dari gambar" },
+  "clipboard.ocrFailed": { "serius": "OCR tidak tersedia di perangkat ini", "kocak": "OCR tidak tersedia" },
+
+  "camera.title": { "serius": "Cermin kamera", "kocak": "Cek penampilan" },
+  "camera.active": { "serius": "Kamera aktif · mati saat island menciut", "kocak": "Kamera nyala · mati kalau kapsul ciut" },
+  "camera.denied": { "serius": "Kamera tidak bisa dibuka: {0}. Nyalakan izin kamera di Pengaturan Windows.", "kocak": "Kamera menolak: {0}. Nyalakan izinnya di Pengaturan Windows." },
+  "camera.close": { "serius": "Tutup", "kocak": "Tutup" },
+
+  "settings.clipboard": { "serius": "Riwayat clipboard aman", "kocak": "Ingatan clipboard" },
+  "settings.clipboardNote": { "serius": "Hanya di memori, maksimal 30 entri dan 24 jam. Kata sandi, token, dan nomor kartu disamarkan sebelum disimpan.", "kocak": "Cuma di memori, maksimal 30 entri dan 24 jam. Sandi, token, dan nomor kartu disensor dulu." },
+  "settings.palette": { "serius": "Command palette (Ctrl+Alt+V)", "kocak": "Palet perintah (Ctrl+Alt+V)" },
+  "settings.osd": { "serius": "Tampilan volume dan kecerahan", "kocak": "Tampilan suara dan terang" },
+  "settings.osdNote": { "serius": "Menampilkan kapsul saat volume/kecerahan berubah. OSD bawaan Windows tetap ada; modul ini bisa dimatikan.", "kocak": "Kapsul muncul saat suara/terang berubah. OSD bawaan Windows tetap ada; bisa dimatikan." },
+  "settings.mirror": { "serius": "Cermin kamera", "kocak": "Cek tampang" },
+  "settings.mirrorNote": { "serius": "Pratinjau singkat untuk mengecek penampilan. Kamera mati begitu pratinjau ditutup atau island menciut; tidak ada gambar yang disimpan.", "kocak": "Pratinjau singkat buat cek penampilan. Kamera mati saat ditutup atau kapsul ciut; gambar tidak disimpan." },
+  "settings.shortcuts": { "serius": "Pintasan aplikasi dan folder", "kocak": "App dan folder langganan" },
+  "settings.shortcutsNote": { "serius": "Hanya path yang Anda daftarkan sendiri, tersimpan di shortcuts.json. Tidak ada eksekusi dari sumber luar.", "kocak": "Cuma path yang kamu daftarkan sendiri di shortcuts.json. Tidak ada perintah dari luar." },
+  "settings.modulesNote": { "serius": "Setiap modul Tahap 5 punya saklar sendiri dan tidak memperlambat modul lain.", "kocak": "Tiap modul punya saklar sendiri dan tidak bikin modul lain lemot." }
 }

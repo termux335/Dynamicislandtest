@@ -227,6 +227,73 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         }
     }
 
+    private bool clipboardEnabled;
+
+    public bool ClipboardEnabled
+    {
+        get => clipboardEnabled;
+        set
+        {
+            if (clipboardEnabled == value) return;
+            clipboardEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool paletteEnabled = true;
+
+    public bool PaletteEnabled
+    {
+        get => paletteEnabled;
+        set
+        {
+            if (paletteEnabled == value) return;
+            paletteEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool osdEnabled;
+
+    public bool OsdEnabled
+    {
+        get => osdEnabled;
+        set
+        {
+            if (osdEnabled == value) return;
+            osdEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool mirrorEnabled;
+
+    public bool MirrorEnabled
+    {
+        get => mirrorEnabled;
+        set
+        {
+            if (mirrorEnabled == value) return;
+            mirrorEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private IReadOnlyList<Shortcut> shortcuts = Array.Empty<Shortcut>();
+
+    /// <summary>Pintasan aplikasi/folder yang didaftarkan pengguna (Tahap 5a).</summary>
+    public IReadOnlyList<Shortcut> Shortcuts
+    {
+        get => shortcuts;
+        set
+        {
+            shortcuts = value ?? Array.Empty<Shortcut>();
+            RaiseAll();
+        }
+    }
+
+    public bool HasShortcuts => shortcuts.Count > 0;
+
     public string MenuContext => text.Get("menu.context");
 
     public string MenuSafeShare => text.Get("menu.safeShare");
@@ -256,6 +323,32 @@ public sealed class IslandViewModel : INotifyPropertyChanged
     public string LabelWeather => text.Get("settings.weather");
 
     public string LabelWeatherNote => text.Get("settings.weatherNote");
+
+    public string LabelClipboard => text.Get("settings.clipboard");
+
+    public string LabelClipboardNote => text.Get("settings.clipboardNote");
+
+    public string LabelPalette => text.Get("settings.palette");
+
+    public string LabelOsd => text.Get("settings.osd");
+
+    public string LabelOsdNote => text.Get("settings.osdNote");
+
+    public string LabelMirror => text.Get("settings.mirror");
+
+    public string LabelMirrorNote => text.Get("settings.mirrorNote");
+
+    public string LabelModulesNote => text.Get("settings.modulesNote");
+
+    public string MenuPalette => text.Get("menu.palette");
+
+    public string MenuClipboard => text.Get("menu.clipboard");
+
+    public string MenuClipboardClear => text.Get("menu.clipboardClear");
+
+    public string MenuCamera => text.Get("menu.camera");
+
+    public string MenuShortcuts => text.Get("menu.shortcuts");
 
     // --- Penempatan adaptif (Tahap 3) ---
 
@@ -352,7 +445,11 @@ public sealed class IslandViewModel : INotifyPropertyChanged
 
     public string Glyph => Primary is null ? string.Empty : Glyphs.For(Primary.Kind);
 
-    public IReadOnlyList<ActivityAction> Actions => Primary?.Actions ?? Array.Empty<ActivityAction>();
+    /// <summary>Aksi aktivitas plus dua pintasan aplikasi di kartu expanded.</summary>
+    public IReadOnlyList<ActivityAction> Actions =>
+        (Primary?.Actions ?? Array.Empty<ActivityAction>())
+            .Concat(Shortcuts.Take(2).Select(shortcut => new ActivityAction("shortcut:" + shortcut.Id, shortcut.Label, "app")))
+            .ToList();
 
     public bool HasActions => Actions.Count > 0;
 

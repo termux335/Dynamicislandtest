@@ -10,6 +10,7 @@ public enum IslandHotkey
     PlayPause,
     Next,
     MuteMic,
+    Palette,
 }
 
 /// <summary>
@@ -27,10 +28,12 @@ internal sealed class HotkeyHost
     private const int PlayPauseId = 0x5001;
     private const int NextId = 0x5002;
     private const int MuteId = 0x5003;
+    private const int PaletteId = 0x5004;
 
     private const uint VkSpace = 0x20;
     private const uint VkN = 0x4E;
     private const uint VkM = 0x4D;
+    private const uint VkV = 0x56;
 
     private readonly List<int> registered = new();
     private HwndSource? source;
@@ -51,6 +54,7 @@ internal sealed class HotkeyHost
         Register(handle, PlayPauseId, VkSpace, "play/jeda");
         Register(handle, NextId, VkN, "lagu berikutnya");
         Register(handle, MuteId, VkM, "bisukan mic");
+        Register(handle, PaletteId, VkV, "perintah cepat");
     }
 
     public event Action<IslandHotkey>? Pressed;
@@ -95,6 +99,7 @@ internal sealed class HotkeyHost
             PlayPauseId => IslandHotkey.PlayPause,
             NextId => IslandHotkey.Next,
             MuteId => IslandHotkey.MuteMic,
+            PaletteId => IslandHotkey.Palette,
             _ => (IslandHotkey)(-1),
         };
 

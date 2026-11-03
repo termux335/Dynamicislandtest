@@ -4,6 +4,31 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan
 [Semantic Versioning](https://semver.org/lang/id/). Semua perubahan yang terlihat
 pengguna dicatat di sini; detail teknis ada di riwayat git.
 
+## [0.4.0-beta] - 2026-11-03
+
+Tahap 5a: modul harian yang berdiri sendiri.
+
+### Added
+
+- Riwayat clipboard aman: 30 entri, 24 jam, hanya di memori. Kata sandi, token,
+  API key, OTP/PIN, JWT, dan nomor kartu (Luhn) disamarkan sebelum disimpan.
+  Gambar disalin dibaca dengan OCR bawaan Windows bila tersedia.
+- Command palette **Ctrl+Alt+V**: hitungan ("15% dari 240 ribu"), konversi satuan
+  offline (panjang, massa, waktu, data, suhu), pencarian clipboard, dan pintasan.
+- Cermin kamera sementara: pratinjau di jendela sendiri, indikator aktif, kamera
+  mati saat jendela ditutup atau island menciut, tanpa menyimpan gambar.
+- Tampilan volume/kecerahan pengganti: volume lewat Core Audio, kecerahan lewat
+  DDC/CI; saklar sendiri, mati secara bawaan.
+- Pintasan aplikasi/folder dari `shortcuts.json`, tampil sebagai tombol kecil di
+  kartu expanded dan bisa dicari dari palette.
+- 29 tes baru: penyamaran data, Luhn, riwayat/retensi, kalkulator dan konversi,
+  palette, serta format OSD (total 245).
+
+### Changed
+
+- Versi naik ke `0.4.0-beta`; pengaturan menyimpan saklar module Tahap 5a.
+- Saklar modul diterapkan tanpa restart lewat `App.ApplyModules`.
+
 ## [0.3.0-beta] - 2026-11-03
 
 Tahap 4: mode tidak mengganggu dan modul pembeda.

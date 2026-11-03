@@ -5,14 +5,18 @@ timer, rapat, notifikasi, dan aktivitas lain — lalu ciut sendiri saat tidak
 dibutuhkan. Windows tidak punya notch, jadi kapsulnya melayang 8 px dari tepi
 atas.
 
-Status: **0.3.0-beta**. Fitur Tahap 1–4 sudah dipakai harian, termasuk mode tidak
+Status: **0.4.0-beta**. Fitur Tahap 1–4 sudah dipakai harian, termasuk mode tidak
 mengganggu (game, video layar penuh, rapat, berbagi layar), mode berbagi layar
 aman, jadwal salat lokal, peringatan cuaca BMKG opsional, pengingat kebiasaan,
-skenario otomatis, dan pelindung layar OLED. Tahap 5 (modul tambahan) belum
-dikerjakan. Belum ditandatangani dan belum ada installer MSIX.
+skenario otomatis, dan pelindung layar OLED.
+
+Tahap 5a sudah tersedia: riwayat clipboard aman (data sensitif disamarkan,
+memori saja), command palette dengan kalkulator dan konversi satuan offline,
+cermin kamera sementara, tampilan volume/kecerahan, dan pintasan aplikasi.
+Tahap 5b–5c belum dikerjakan. Belum ditandatangani dan belum ada installer MSIX.
 
 Kontrol tanpa keluar dari game: **Ctrl+Alt+Spasi** putar/jeda, **Ctrl+Alt+N**
-lagu berikutnya, **Ctrl+Alt+M** bisukan mikrofon.
+lagu berikutnya, **Ctrl+Alt+M** bisukan mikrofon, **Ctrl+Alt+V** command palette.
 
 ## Isi repo
 

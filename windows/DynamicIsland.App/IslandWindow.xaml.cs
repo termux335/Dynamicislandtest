@@ -82,6 +82,27 @@ public partial class IslandWindow : Window
     /// <summary>Pintasan global ditekan (Tahap 4); App yang menjalankan aksinya.</summary>
     public event Action<IslandHotkey>? HotkeyPressed;
 
+    /// <summary>Menu Tahap 5a; App yang membuka palette, kamera, atau berkas pintasan.</summary>
+    public event Action? PaletteRequested;
+
+    public event Action? ClipboardRequested;
+
+    public event Action? ClipboardClearRequested;
+
+    public event Action? CameraRequested;
+
+    public event Action? ShortcutsRequested;
+
+    private void Palette_Click(object sender, RoutedEventArgs e) => PaletteRequested?.Invoke();
+
+    private void Clipboard_Click(object sender, RoutedEventArgs e) => ClipboardRequested?.Invoke();
+
+    private void ClipboardClear_Click(object sender, RoutedEventArgs e) => ClipboardClearRequested?.Invoke();
+
+    private void Camera_Click(object sender, RoutedEventArgs e) => CameraRequested?.Invoke();
+
+    private void Shortcuts_Click(object sender, RoutedEventArgs e) => ShortcutsRequested?.Invoke();
+
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);

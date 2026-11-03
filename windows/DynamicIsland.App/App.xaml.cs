@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
 using DynamicIsland.Core;
@@ -26,6 +27,12 @@ public partial class App : Application, IDisposable
     private HabitMonitor? habitMonitor;
     private ScenarioMonitor? scenarioMonitor;
     private IdleWatcher? idleWatcher;
+    private ClipboardHistory? clipboardHistory;
+    private ClipboardMonitor? clipboardMonitor;
+    private OsdMonitor? osdMonitor;
+    private ShortcutStore? shortcutStore;
+    private PaletteWindow? paletteWindow;
+    private CameraMirrorWindow? cameraWindow;
     private IslandViewModel? model;
     private IslandWindow? window;
     private SettingsWindow? settingsWindow;
@@ -64,6 +71,10 @@ public partial class App : Application, IDisposable
             HabitsEnabled = settings.HabitsEnabled,
             StudyMode = settings.StudyMode,
             WeatherEnabled = settings.WeatherEnabled,
+            ClipboardEnabled = settings.ClipboardEnabled,
+            PaletteEnabled = settings.PaletteEnabled,
+            OsdEnabled = settings.OsdEnabled,
+            MirrorEnabled = settings.MirrorEnabled,
         };
         this.model = model;
 
@@ -96,6 +107,12 @@ public partial class App : Application, IDisposable
                 case "meeting.mic-toggle": microphoneMonitor?.ToggleMute(); break;
                 case "meeting.back": microphoneMonitor?.BackToMeeting(); break;
                 case "notification.dismiss": notifications.DismissLatest(); break;
+                default:
+                    if (action.Id.StartsWith("shortcut:", StringComparison.Ordinal))
+                    {
+                        OpenShortcut(action.Id["shortcut:".Length..]);
+                    }
+                    break;
             }
         };
 
@@ -227,6 +244,49 @@ public partial class App : Application, IDisposable
 
         window.HotkeyPressed += key => HandleHotkey(key, media, microphoneMonitor);
 
+        // Tahap 5a: clipboard, palette, OSD, dan pintasan aplikasi.
+        clipboardHistory = new ClipboardHistory();
+        clipboardMonitor = new ClipboardMonitor(clipboardHistory, Dispatcher, text);
+        clipboardMonitor.SetEnabled(model.ClipboardEnabled);
+
+        shortcutStore = new ShortcutStore();
+        if (shortcutStore.Load()) Log.Write($"pintasan: {shortcutStore.All.Count} dimuat");
+        model.Shortcuts = shortcutStore.All;
+
+        osdMonitor = new OsdMonitor(controller, Dispatcher, text);
+        osdMonitor.SetEnabled(model.OsdEnabled);
+
+        // Jalan pintas uji manual modul Tahap 5a.
+        if (Environment.GetEnvironmentVariable("ISLAND_CLIPBOARD") == "1")
+        {
+            model.ClipboardEnabled = true;
+            clipboardMonitor.SetEnabled(true);
+        }
+
+        if (Environment.GetEnvironmentVariable("ISLAND_OSD") == "1")
+        {
+            model.OsdEnabled = true;
+            osdMonitor.SetEnabled(true);
+        }
+
+        if (Environment.GetEnvironmentVariable("ISLAND_MIRROR") == "1") model.MirrorEnabled = true;
+
+        window.PaletteRequested += TogglePalette;
+        window.ClipboardRequested += TogglePalette;
+        window.ClipboardClearRequested += ClearClipboard;
+        window.CameraRequested += ToggleCamera;
+        window.ShortcutsRequested += OpenShortcuts;
+
+        // Kamera tidak boleh hidup saat island menciut atau disembunyikan.
+        controller.Changed += presentation =>
+        {
+            if (cameraWindow is null) return;
+            if (!presentation.Visible || presentation.Primary is { State: not ActivityState.Expanded })
+            {
+                cameraWindow.Close();
+            }
+        };
+
         if (demo) DemoEvents.Seed(controller);
     }
 
@@ -268,6 +328,8 @@ public partial class App : Application, IDisposable
         prayerMonitor?.SetEnabled(model.PrayerEnabled);
         weatherMonitor?.Configure(model.WeatherEnabled, weatherAdm4);
         habitMonitor?.Configure(model.HabitsEnabled);
+        clipboardMonitor?.SetEnabled(model.ClipboardEnabled);
+        osdMonitor?.SetEnabled(model.OsdEnabled);
         scenarioMonitor?.Poll();
 
         if (notificationMonitor is not null && scenarioMonitor is not null)
@@ -313,7 +375,195 @@ public partial class App : Application, IDisposable
                 microphone?.ToggleMute();
                 Feedback(microphone?.IsMuted == true ? "hotkey.muted" : "hotkey.unmuted");
                 break;
+
+            case IslandHotkey.Palette:
+                TogglePalette();
+                break;
         }
+    }
+
+    // --- Tahap 5a: palette, clipboard, kamera, pintasan ---
+
+    private void TogglePalette()
+    {
+        if (model is null) return;
+        if (!model.PaletteEnabled)
+        {
+            Log.Write("palette: dimatikan di pengaturan");
+            return;
+        }
+
+        if (paletteWindow is { IsVisible: true })
+        {
+            paletteWindow.Close();
+            return;
+        }
+
+        var window = new PaletteWindow(
+            model.Text.Get("palette.title"),
+            model.Text.Get("palette.placeholder"),
+            model.Text.Get("palette.hint"),
+            model.Text.Get("palette.empty"));
+
+        window.Search = BuildPalette;
+        window.Chosen += ExecutePalette;
+        window.Closed += (_, _) => paletteWindow = null;
+
+        paletteWindow = window;
+        window.Show();
+        window.Activate();
+    }
+
+    private IReadOnlyList<PaletteEntry> BuildPalette(string query)
+    {
+        if (model is null) return Array.Empty<PaletteEntry>();
+
+        var text = model.Text;
+        var labels = new PaletteLabels(
+            text.Get("palette.copy"),
+            "Folder",
+            "Aplikasi",
+            text.Get("clipboard.title"));
+
+        clipboardHistory?.Purge();
+
+        var entries = Palette.Build(query, shortcutStore?.All, clipboardHistory?.Items, labels).ToList();
+
+        var commands = new[]
+        {
+            (Id: "media-toggle", Label: text.Get("quickAction.mediaToggle")),
+            (Id: "media-next", Label: text.Get("quickAction.mediaNext")),
+            (Id: "timer-focus", Label: text.Get("quickAction.timerFocus")),
+            (Id: "clipboard-clear", Label: text.Get("menu.clipboardClear")),
+            (Id: "camera", Label: text.Get("menu.camera")),
+        };
+
+        var trimmed = query.Trim();
+
+        foreach (var command in commands)
+        {
+            if (trimmed.Length > 0 && !command.Label.Contains(trimmed, StringComparison.OrdinalIgnoreCase)) continue;
+
+            entries.Add(new PaletteEntry(command.Id, command.Label, text.Get("menu.palette"), PaletteKind.Command, string.Empty));
+        }
+
+        return entries.Take(8).ToList();
+    }
+
+    private void ExecutePalette(PaletteEntry entry)
+    {
+        switch (entry.Kind)
+        {
+            case PaletteKind.Calculation:
+            case PaletteKind.Clipboard:
+                try
+                {
+                    System.Windows.Clipboard.SetText(entry.Payload);
+                    Log.Write("palette: hasil disalin ke clipboard");
+                }
+                catch (ExternalException error)
+                {
+                    Log.Write("palette: gagal menyalin (" + error.Message + ")");
+                }
+                break;
+
+            case PaletteKind.Shortcut:
+                StartPath(entry.Payload);
+                break;
+
+            default:
+                switch (entry.Id)
+                {
+                    case "media-toggle": mediaMonitor?.TogglePlayPause(); break;
+                    case "media-next": mediaMonitor?.Next(); break;
+                    case "timer-focus": timerMonitor?.StartFocus(); break;
+                    case "clipboard-clear": ClearClipboard(); break;
+                    case "camera": ToggleCamera(); break;
+                }
+                break;
+        }
+    }
+
+    private void ClearClipboard()
+    {
+        clipboardHistory?.Clear();
+        Log.Write("clipboard: riwayat dihapus pengguna");
+        Notify("clipboard.title", "clipboard.cleared");
+    }
+
+    private void ToggleCamera()
+    {
+        if (model is null) return;
+
+        if (!model.MirrorEnabled)
+        {
+            Log.Write("kamera: modul dimatikan di pengaturan");
+            return;
+        }
+
+        if (cameraWindow is { IsVisible: true })
+        {
+            cameraWindow.Close();
+            return;
+        }
+
+        var window = new CameraMirrorWindow(
+            model.Text,
+            model.Text.Get("camera.title"),
+            model.Text.Get("camera.active"),
+            model.Text.Get("camera.denied"),
+            model.Text.Get("camera.close"));
+
+        window.Closed += (_, _) => cameraWindow = null;
+        cameraWindow = window;
+        window.Show();
+    }
+
+    private void OpenShortcuts()
+    {
+        if (shortcutStore is null) return;
+
+        shortcutStore.Save();
+        StartPath(shortcutStore.FilePath);
+    }
+
+    private void OpenShortcut(string id)
+    {
+        var shortcut = shortcutStore?.All.FirstOrDefault(item => item.Id == id);
+        if (shortcut is null)
+        {
+            Log.Write($"pintasan: {id} tidak ditemukan");
+            return;
+        }
+
+        StartPath(shortcut.Path);
+    }
+
+    private static void StartPath(string path)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            Log.Write($"pintasan: membuka {path}");
+        }
+        catch (Exception error) when (error is System.ComponentModel.Win32Exception or InvalidOperationException or System.IO.FileNotFoundException)
+        {
+            Log.Write($"pintasan: gagal membuka {path}: {error.Message}");
+        }
+    }
+
+    private void Notify(string titleKey, string messageKey)
+    {
+        if (controller is null || model is null) return;
+
+        controller.Refresh(new Activity(
+            id: "module-feedback",
+            kind: ActivityKind.Notification,
+            priority: 92,
+            title: model.Text.Get(titleKey),
+            subtitle: model.Text.Get(messageKey),
+            isLive: false,
+            expiresAt: DateTimeOffset.Now.AddMilliseconds(1600)));
     }
 
     private void Feedback(string key)
@@ -379,6 +629,10 @@ public partial class App : Application, IDisposable
             weatherAdm4,
             model.HabitsEnabled,
             model.StudyMode,
+            model.ClipboardEnabled,
+            model.PaletteEnabled,
+            model.OsdEnabled,
+            model.MirrorEnabled,
             contextSettings with { Enabled = model.ContextEnabled });
 
         if (!SettingsStore.Save(settings)) Log.Write("pengaturan: gagal disimpan");
@@ -413,7 +667,11 @@ public partial class App : Application, IDisposable
         weatherMonitor?.Dispose();
         habitMonitor?.Dispose();
         scenarioMonitor?.Dispose();
+        clipboardMonitor?.Dispose();
+        osdMonitor?.Dispose();
         idleWatcher?.Dispose();
+        paletteWindow?.Close();
+        cameraWindow?.Close();
         pipe?.Dispose();
 
         GC.SuppressFinalize(this);

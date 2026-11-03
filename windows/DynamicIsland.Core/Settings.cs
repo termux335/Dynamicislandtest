@@ -26,6 +26,10 @@ public sealed record IslandSettings(
     string? WeatherAdm4 = null,
     bool HabitsEnabled = false,
     bool StudyMode = false,
+    bool ClipboardEnabled = false,
+    bool PaletteEnabled = true,
+    bool OsdEnabled = false,
+    bool MirrorEnabled = false,
     ContextAwarenessSettings? Context = null);
 
 /// <summary>

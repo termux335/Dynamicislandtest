@@ -1,10 +1,10 @@
-# Dynamic Island — Windows (beta, 0.3.0-beta)
+# Dynamic Island — Windows (beta, 0.4.0-beta)
 
 Kapsul mengambang di tengah atas layar, 30–480 px tergantung state. Windows tidak
 punya notch, jadi kapsul selalu melayang 8 px dari tepi atas.
 
-> **Status: beta publik (0.3.0-beta).** Fitur Tahap 1–4 sudah dipakai harian;
-> Tahap 5 belum dikerjakan. Build belum ditandatangani, jadi Windows SmartScreen
+> **Status: beta publik (0.4.0-beta).** Fitur Tahap 1–4 dan Tahap 5a sudah
+> dipakai harian; Tahap 5b–5c belum dikerjakan. Build belum ditandatangani, jadi Windows SmartScreen
 > bisa menampilkan peringatan saat pertama dijalankan. Angka versi ada di
 > `Directory.Build.props` (satu sumber untuk semua proyek), tampil di kaki jendela
 > Pengaturan, dan dicatat di log saat app mulai. Format berkas pengaturan masih
@@ -150,6 +150,53 @@ powershell -ExecutionPolicy Bypass -File windows\Scripts\measure-cpu.ps1 -Second
 - Cuaca BMKG: satu permintaan HTTPS ke `api.bmkg.go.id` saat modul dinyalakan;
   mati secara bawaan dan bisa dimatikan lagi kapan saja.
 - Profil aplikasi: hanya nama proses, posisi, opacity, dan tingkat respons.
+
+## Tahap 5a: modul harian
+
+Semua modul di bawah punya saklar sendiri di **Pengaturan** atau menu klik kanan,
+meminta izin hanya saat dinyalakan, dan tidak boleh menjatuhkan modul lain.
+
+| Modul | Saklar | Perilaku |
+|---|---|---|
+| Riwayat clipboard | Pengaturan (mati bawaan) | 30 entri terakhir, 24 jam, hanya di memori. Password, token, API key, OTP/PIN, JWT, dan nomor kartu (Luhn) disamarkan sebelum disimpan. Gambar disalin dibaca dengan OCR Windows bila tersedia |
+| Command palette | **Ctrl+Alt+V** (bisa dimatikan) | Hitungan (`15% dari 240 ribu`), konversi satuan offline, pencarian clipboard, dan pintasan aplikasi. Enter menyalin hasil atau membuka pintasan |
+| Cermin kamera | Pengaturan (mati bawaan) | Pratinjau singkat dengan indikator kamera aktif. Kamera mati saat jendela ditutup atau kapsul menciut. Tidak ada gambar disimpan |
+| Tampilan volume/kecerahan | Pengaturan (mati bawaan) | Kapsul menampilkan volume (Core Audio) dan kecerahan (DDC/CI). OSD bawaan Windows tetap ada; modul ini bisa dimatikan |
+| Pintasan aplikasi | `shortcuts.json` lewat menu | Maksimal 24 path/URL yang didaftarkan sendiri, tampil sebagai tombol kecil di kartu expanded dan bisa dicari di palette. Tidak ada eksekusi dari sumber luar |
+
+### Uji manual
+
+```powershell
+$env:ISLAND_CLIPBOARD = '1'   # nyalakan riwayat clipboard tanpa mengubah pengaturan
+$env:ISLAND_OSD = '1'         # tampilkan OSD kapsul
+$env:ISLAND_MIRROR = '1'      # izinkan cermin kamera dari menu
+```
+
+Salin teks, nomor kartu, atau gambar, lalu buka palette dengan **Ctrl+Alt+V** dan
+cari isinya. Nomor kartu dan token harus muncul dalam bentuk tersamarkan; isi
+asli tidak pernah masuk riwayat.
+
+### Izin dan data Tahap 5a
+
+- Clipboard: listener Windows biasa (`AddClipboardFormatListener`), bukan hook
+  keyboard. Riwayat hanya di memori dan hilang saat app ditutup. OCR memakai
+  mesin OCR Windows di perangkat; tidak ada unggahan.
+- Kamera: izin Windows (Pengaturan → Privasi → Kamera → aplikasi desktop).
+  Kamera hanya hidup selama jendela pratinjau terbuka.
+- Volume/kecerahan: membaca level audio dan DDC/CI monitor; tidak merekam suara
+  atau layar.
+- Palette: kalkulator dan konversi satuan sepenuhnya offline. Tidak ada kurs yang
+  butuh internet.
+- Pintasan: hanya path/URL yang Anda tulis di `shortcuts.json`.
+
+### Batasan
+
+- OSD bawaan Windows tidak bisa dimatikan tanpa hook, jadi tampilan ini
+  mendampingi, bukan menggantikan sepenuhnya.
+- OCR bergantung pada paket bahasa Windows; bila tidak tersedia, gambar tetap
+  disimpan dan alasannya masuk log.
+- Kecerahan hanya tersedia pada monitor yang mendukung DDC/CI.
+- Riwayat clipboard tidak disimpan antar sesi.
 
 ## Fitur
 

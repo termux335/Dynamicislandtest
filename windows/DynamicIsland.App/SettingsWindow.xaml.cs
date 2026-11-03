@@ -54,6 +54,10 @@ public partial class SettingsWindow : Window
         PrayerCheck.IsChecked = model.PrayerEnabled;
         OledCheck.IsChecked = model.OledProtection;
         WeatherCheck.IsChecked = model.WeatherEnabled;
+        ClipboardCheck.IsChecked = model.ClipboardEnabled;
+        PaletteCheck.IsChecked = model.PaletteEnabled;
+        OsdCheck.IsChecked = model.OsdEnabled;
+        MirrorCheck.IsChecked = model.MirrorEnabled;
 
         ready = true;
     }
@@ -186,6 +190,50 @@ public partial class SettingsWindow : Window
         }
 
         model.WeatherEnabled = wanted;
+    }
+
+    private void Clipboard_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.ClipboardEnabled = ClipboardCheck.IsChecked == true;
+    }
+
+    private void Palette_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.PaletteEnabled = PaletteCheck.IsChecked == true;
+    }
+
+    private void Osd_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.OsdEnabled = OsdCheck.IsChecked == true;
+    }
+
+    /// <summary>Kamera memakai izin Windows; penjelasannya ditampilkan saat dinyalakan.</summary>
+    private void Mirror_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!ready) return;
+
+        var wanted = MirrorCheck.IsChecked == true;
+
+        if (wanted)
+        {
+            var answer = MessageBox.Show(
+                this,
+                model.LabelMirrorNote,
+                model.LabelMirror,
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                ready = false;
+                MirrorCheck.IsChecked = false;
+                ready = true;
+                model.MirrorEnabled = false;
+                return;
+            }
+        }
+
+        model.MirrorEnabled = wanted;
     }
 
     private void Primary_Click(object sender, RoutedEventArgs e)

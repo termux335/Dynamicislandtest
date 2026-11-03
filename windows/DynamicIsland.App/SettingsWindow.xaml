@@ -98,6 +98,19 @@
             <CheckBox x:Name="WeatherCheck" Content="{Binding LabelWeather}" Margin="0,14,0,0" Checked="Weather_Changed" Unchecked="Weather_Changed" />
             <TextBlock Text="{Binding LabelWeatherNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
 
+            <TextBlock Text="{Binding LabelModulesNote}" Style="{StaticResource Section}" />
+
+            <CheckBox x:Name="ClipboardCheck" Content="{Binding LabelClipboard}" Checked="Clipboard_Changed" Unchecked="Clipboard_Changed" />
+            <TextBlock Text="{Binding LabelClipboardNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="PaletteCheck" Content="{Binding LabelPalette}" Margin="0,14,0,0" Checked="Palette_Changed" Unchecked="Palette_Changed" />
+
+            <CheckBox x:Name="OsdCheck" Content="{Binding LabelOsd}" Margin="0,14,0,0" Checked="Osd_Changed" Unchecked="Osd_Changed" />
+            <TextBlock Text="{Binding LabelOsdNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="MirrorCheck" Content="{Binding LabelMirror}" Margin="0,14,0,0" Checked="Mirror_Changed" Unchecked="Mirror_Changed" />
+            <TextBlock Text="{Binding LabelMirrorNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
             <TextBlock Text="{Binding LabelPermissions}" Style="{StaticResource Muted}" Margin="0,18,0,0" />
 
             <Button x:Name="PrimaryButton"
