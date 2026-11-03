@@ -31,6 +31,7 @@ public sealed class MediaMonitor : IDisposable
     private bool shown;
 
     /// <summary>Lagu yang liriknya sudah dimuat, supaya berkas tidak dibaca tiap detik.</summary>
+    private readonly RepeatTrackDetector repeatDetector = new();
     private string? lyricsKey;
 
     private IReadOnlyList<LyricLine> lyrics = Array.Empty<LyricLine>();
@@ -162,6 +163,17 @@ public sealed class MediaMonitor : IDisposable
                 lyricsKey = key;
                 Log.Write($"media: lagu {title}" + (string.IsNullOrEmpty(artist) ? string.Empty : $" — {artist}"));
                 lyrics = LyricsSource.Load(artist, title);
+
+                if (repeatDetector.TrackPlayed(title, artist) && text.Humor == HumorMode.Kocak)
+                {
+                    _ = dispatcher.BeginInvoke(() =>
+                        controller.Refresh(new Activity(
+                            id: "humor-repeat",
+                            kind: ActivityKind.Notification,
+                            title: text.Get("humor.repeat"),
+                            isLive: false,
+                            expiresAt: DateTimeOffset.Now.AddSeconds(4))));
+                }
             }
 
             var caption = Lyrics.At(lyrics, position);

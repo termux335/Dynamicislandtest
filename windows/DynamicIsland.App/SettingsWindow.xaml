@@ -71,6 +71,14 @@
 
             <CheckBox x:Name="HumorCheck" Content="{Binding MenuHumor}" Margin="0,18,0,0" Checked="Humor_Changed" Unchecked="Humor_Changed" />
             <TextBlock Text="{Binding LabelHumorNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+            <StackPanel x:Name="HumorDetailsPanel" Margin="20,8,0,0">
+                <CheckBox x:Name="HumorEyesCheck" Content="{Binding LabelHumorEyes}" Checked="HumorBehavior_Changed" Unchecked="HumorBehavior_Changed" />
+                <CheckBox x:Name="HumorTickleCheck" Content="{Binding LabelHumorTickle}" Margin="0,6,0,0" Checked="HumorBehavior_Changed" Unchecked="HumorBehavior_Changed" />
+                <CheckBox x:Name="HumorSulkCheck" Content="{Binding LabelHumorSulk}" Margin="0,6,0,0" Checked="HumorBehavior_Changed" Unchecked="HumorBehavior_Changed" />
+                <CheckBox x:Name="HumorRepeatCheck" Content="{Binding LabelHumorRepeat}" Margin="0,6,0,0" Checked="HumorBehavior_Changed" Unchecked="HumorBehavior_Changed" />
+                <CheckBox x:Name="HumorDramaCheck" Content="{Binding LabelHumorDrama}" Margin="0,6,0,0" Checked="HumorBehavior_Changed" Unchecked="HumorBehavior_Changed" />
+                <CheckBox x:Name="HumorEasterCheck" Content="{Binding LabelHumorEaster}" Margin="0,6,0,0" Checked="HumorBehavior_Changed" Unchecked="HumorBehavior_Changed" />
+            </StackPanel>
 
             <CheckBox x:Name="AutostartCheck" Content="{Binding LabelAutostart}" Margin="0,14,0,0" Checked="Autostart_Changed" Unchecked="Autostart_Changed" />
             <TextBlock Text="{Binding LabelAutostartNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />

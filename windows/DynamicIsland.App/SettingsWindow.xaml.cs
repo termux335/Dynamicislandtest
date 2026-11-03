@@ -47,6 +47,14 @@ public partial class SettingsWindow : Window
         AccentPurple.IsChecked = model.IsAccentUngu;
         AccentGreen.IsChecked = model.IsAccentHijau;
         HumorCheck.IsChecked = model.Humor == HumorMode.Kocak;
+        HumorDetailsPanel.Visibility = model.Humor == HumorMode.Kocak ? Visibility.Visible : Visibility.Collapsed;
+        var hb = model.HumorBehaviors;
+        HumorEyesCheck.IsChecked = hb.Eyes;
+        HumorTickleCheck.IsChecked = hb.Tickle;
+        HumorSulkCheck.IsChecked = hb.Sulking;
+        HumorRepeatCheck.IsChecked = hb.RepeatTrack;
+        HumorDramaCheck.IsChecked = hb.DramaticCountdown;
+        HumorEasterCheck.IsChecked = hb.EasterEgg;
         AutostartCheck.IsChecked = model.StartWithWindows;
         ContextCheck.IsChecked = model.ContextEnabled;
         SafeShareCheck.IsChecked = model.SafeShare;
@@ -128,7 +136,24 @@ public partial class SettingsWindow : Window
 
     private void Humor_Changed(object sender, RoutedEventArgs e)
     {
-        if (ready) model.SetHumor(HumorCheck.IsChecked == true ? HumorMode.Kocak : HumorMode.Serius);
+        if (ready)
+        {
+            var kocak = HumorCheck.IsChecked == true;
+            model.SetHumor(kocak ? HumorMode.Kocak : HumorMode.Serius);
+            HumorDetailsPanel.Visibility = kocak ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void HumorBehavior_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!ready) return;
+        model.HumorBehaviors = new HumorSettings(
+            Eyes: HumorEyesCheck.IsChecked == true,
+            Tickle: HumorTickleCheck.IsChecked == true,
+            Sulking: HumorSulkCheck.IsChecked == true,
+            RepeatTrack: HumorRepeatCheck.IsChecked == true,
+            DramaticCountdown: HumorDramaCheck.IsChecked == true,
+            EasterEgg: HumorEasterCheck.IsChecked == true);
     }
 
     private void Autostart_Changed(object sender, RoutedEventArgs e)

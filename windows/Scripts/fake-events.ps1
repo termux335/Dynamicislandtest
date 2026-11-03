@@ -83,6 +83,10 @@ $download = '{"op":"upsert","activity":{"id":"download-1","kind":"download","tit
 $battery = '{"op":"upsert","activity":{"id":"battery-1","kind":"battery","title":"Baterai lemah","subtitle":"14% tersisa","ttlMs":4000}}'
 $calendar = '{"op":"upsert","activity":{"id":"calendar-1","kind":"calendar","title":"Rapat Produk","subtitle":"mulai dalam 15 menit","actions":[{"id":"join","label":"Gabung","glyph":"join"}]}}'
 $order = '{"op":"upsert","activity":{"id":"order-1","kind":"order","title":"Paket #A-1024","subtitle":"Dikirim · tiba hari ini","progress":0.6,"actions":[{"id":"track","label":"Lacak","glyph":"track"}]}}'
+$humorTickle = '{"op":"upsert","activity":{"id":"humor-tickle","kind":"notification","title":"Aduh, geli.","ttlMs":3000}}'
+$humorSulk = '{"op":"upsert","activity":{"id":"timer-1","kind":"timer","title":"Fokus 25:00","subtitle":"Halo? Masih hidup?","progress":0.5}}'
+$humorRepeat = '{"op":"upsert","activity":{"id":"humor-repeat","kind":"notification","title":"Lagu ini lagi? Aku sampai hafal.","ttlMs":4000}}'
+$humorEaster = '{"op":"upsert","activity":{"id":"humor-easter","kind":"notification","title":"Kamu menemukan rahasia!","ttlMs":3000}}'
 
 switch ($Mode) {
     "all" {
@@ -104,6 +108,10 @@ switch ($Mode) {
     "battery" { Send-Event $battery }
     "calendar" { Send-Event $calendar }
     "order" { Send-Event $order }
+    "humor-tickle" { Send-Event $humorTickle }
+    "humor-sulk" { Send-Event $humorSulk }
+    "humor-repeat" { Send-Event $humorRepeat }
+    "humor-easter" { Send-Event $humorEaster }
     "progress" { Send-Event '{"op":"progress","id":"track-1","progress":0.75}' }
     "expire" { Send-Event '{"op":"expire","id":"notif-1"}' }
     "clear" { Send-Event '{"op":"clear","id":"track-1"}' }

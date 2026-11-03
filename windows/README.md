@@ -298,7 +298,7 @@ $agent = "$env:APPDATA\DynamicIsland\agent-status.json"
 | Now Playing sungguhan (Tahap 3) | Otomatis; tanpa izin | Judul, artis, dan progres dari pemutar yang sedang aktif |
 | Kontrol media di kartu (baru) | Klik kapsul saat lagu/video tampil | Kartu media 480 x 152: judul + artis, **baris lirik** (bila ada), garis timeline dengan waktu berjalan/total, dan tiga tombol ikon bundar 40 x 32 — sebelumnya, putar/jeda, berikutnya. Tombol memakai glyph Segoe MDL2 Assets dan label bahasa yang aktif |
 | Lirik lokal (baru) | Taruh `Artis - Judul.lrc` di `%APPDATA%\DynamicIsland\lyrics` (atau folder `ISLAND_LYRICS`) | Baris lirik yang cocok dengan posisi lagu tampil di bawah judul dan berganti sendiri. Tanpa berkas .lrc, baris itu tidak ditampilkan dan tidak ada unduhan apa pun |
-| Aksi cepat (Tahap 3) | Tekan-tahan kapsul 500 ms, atau menu **Aksi cepat** | Panel 312 x 64 berisi **Putar/jeda**, **Berikutnya**, dan **Fokus 25** |
+| Aksi cepat (Tahap 3) | Tekan-tahan kapsul 500 ms, atau menu **Aksi cepat** | Panel 312 x 64 berisi tombol cepat yang dapat diatur pengguna di `%APPDATA%\DynamicIsland\quick-actions.json` (media, timer, tangkapan layar, kamera, catatan, clipboard) |
 | Gestur gulir (Tahap 3) | Gulir saat kursor di atas kapsul | Gulir ke atas = lagu sebelumnya, ke bawah = lagu berikutnya |
 | Pengaturan tersimpan (Tahap 3) | Otomatis | Mode tampilan, dua kapsul, penempatan otomatis, bahasa, Mode Kocak, aksen, posisi, prioritas, dan saklar notifikasi disimpan di `%APPDATA%\DynamicIsland\settings.json` dan dipakai lagi saat app dibuka |
 | Bahasa (Tahap 3) | Klik kanan → **Bahasa → Indonesia/English** | Seluruh menu, label tombol, rak berkas, dan teks pembaca layar berganti bahasa; teks alert (baterai, timer, kalender) ikut berganti pada kejadian berikutnya |
@@ -508,7 +508,8 @@ secara bawaan sesuai `CLAUDE.windows.md`.
   SystemMediaTransportControls (mis. app lama) tidak terlihat.
 - Timer asli berjalan di dalam app (bukan timer sistem), jadi ikut berhenti
   bila app ditutup, dan hanya satu timer yang aktif pada satu waktu.
-- Aksi cepat masih tetap tiga tombol; daftarnya belum bisa diatur pengguna.
+- Aksi cepat dapat dikustomisasi daftarnya lewat `quick-actions.json`.
+- Installer Inno Setup tersedia lewat `windows/installer.iss` (atau `install.ps1` tanpa admin).
 - Progress media dihitung dari posisi yang dilaporkan pemutar, jadi bisa
   meleset sedikit pada pemutar yang jarang memperbarui posisi.
 - Lirik hanya dari berkas `.lrc` lokal yang namanya cocok dengan artis/judul;

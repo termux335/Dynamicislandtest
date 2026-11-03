@@ -32,7 +32,8 @@ public sealed record IslandSettings(
     bool MirrorEnabled = false,
     ContextAwarenessSettings? Context = null,
     Stage5BSettings? Stage5B = null,
-    Stage5CSettings? Stage5C = null);
+    Stage5CSettings? Stage5C = null,
+    HumorSettings? HumorBehaviors = null);
 
 /// <summary>
 /// Menyimpan preferensi ke satu berkas JSON. Berkas hilang atau rusak tidak

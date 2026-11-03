@@ -14,13 +14,60 @@ public sealed class IslandViewModel : INotifyPropertyChanged
     /// <summary>Satu tombol di panel aksi cepat (tekan-tahan 500 ms).</summary>
     public sealed record QuickAction(string Id, string Label);
 
-    /// <summary>Aksi cepat tetap; label mengikuti bahasa dan Mode Kocak.</summary>
-    public IReadOnlyList<QuickAction> QuickActions => new[]
+    private readonly List<string> quickActionIds = new(QuickActionCatalog.DefaultActionIds);
+
+    public void SetQuickActions(IEnumerable<string> ids)
     {
-        new QuickAction("media-toggle", text.Get("quickAction.mediaToggle")),
-        new QuickAction("media-next", text.Get("quickAction.mediaNext")),
-        new QuickAction("timer-focus", text.Get("quickAction.timerFocus")),
+        quickActionIds.Clear();
+        quickActionIds.AddRange(ids.Where(id => QuickActionCatalog.AllKnownActionIds.Contains(id, StringComparer.OrdinalIgnoreCase)));
+        if (quickActionIds.Count == 0) quickActionIds.AddRange(QuickActionCatalog.DefaultActionIds);
+        RaiseAll();
+    }
+
+    public IReadOnlyList<string> QuickActionIds => quickActionIds;
+
+    /// <summary>Aksi cepat yang bisa diatur; label mengikuti bahasa dan Mode Kocak.</summary>
+    public IReadOnlyList<QuickAction> QuickActions => quickActionIds.Select(id => new QuickAction(id, LabelForQuickAction(id))).ToList();
+
+    private string LabelForQuickAction(string id) => id switch
+    {
+        "media-toggle" => text.Get("quickAction.mediaToggle"),
+        "media-next" => text.Get("quickAction.mediaNext"),
+        "timer-focus" => text.Get("quickAction.timerFocus"),
+        "timer-stopwatch" => text.Get("menu.stopwatch"),
+        "screenshot" => text.Get("settings.screenshot"),
+        "camera" => text.Get("menu.camera"),
+        "notes" => text.Get("menu.notes"),
+        "clipboard" => text.Get("menu.clipboard"),
+        _ => id,
     };
+
+    private HumorSettings humorBehaviors = new();
+
+    public HumorSettings HumorBehaviors
+    {
+        get => humorBehaviors;
+        set
+        {
+            humorBehaviors = value ?? new HumorSettings();
+            RaiseAll();
+        }
+    }
+
+    public bool ShowCapsuleEyes => ShowsIdleLayer && IsHumorKocak && humorBehaviors.Eyes;
+    public bool ShowsStandardDot => !ShowCapsuleEyes;
+
+    public double PupilOffsetX { get; private set; }
+    public double PupilOffsetY { get; private set; }
+
+    public void UpdatePupils(double ox, double oy)
+    {
+        if (Math.Abs(PupilOffsetX - ox) < 0.1 && Math.Abs(PupilOffsetY - oy) < 0.1) return;
+        PupilOffsetX = ox;
+        PupilOffsetY = oy;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PupilOffsetX)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PupilOffsetY)));
+    }
 
     private const int MaxShelfFiles = 12;
 
@@ -976,6 +1023,15 @@ public sealed class IslandViewModel : INotifyPropertyChanged
     public string LabelSettingsIntro => text.Get("settings.intro");
 
     public string LabelHumorNote => text.Get("settings.humorNote");
+
+    public string LabelHumorBehaviors => text.Get("settings.humorBehaviors");
+    public string LabelHumorBehaviorsNote => text.Get("settings.humorBehaviorsNote");
+    public string LabelHumorEyes => text.Get("settings.humorEyes");
+    public string LabelHumorTickle => text.Get("settings.humorTickle");
+    public string LabelHumorSulk => text.Get("settings.humorSulk");
+    public string LabelHumorRepeat => text.Get("settings.humorRepeat");
+    public string LabelHumorDrama => text.Get("settings.humorDrama");
+    public string LabelHumorEaster => text.Get("settings.humorEaster");
 
     public string LabelAutostart => text.Get("settings.autostart");
 

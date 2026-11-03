@@ -172,10 +172,30 @@
             Drop="Capsule_Drop"
             AutomationProperties.Name="{Binding AccessibilityLabel}">
         <Grid>
-            <!-- Idle: tidak ada aktivitas, hanya titik penanda. -->
+            <!-- Idle: tidak ada aktivitas, hanya titik penanda atau mata Mode Kocak. -->
             <Grid Visibility="{Binding ShowsIdleLayer, Converter={StaticResource BoolToVisibility}}">
                 <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}" Opacity="0.45"
-                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                         Visibility="{Binding ShowsStandardDot, Converter={StaticResource BoolToVisibility}}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Visibility="{Binding ShowCapsuleEyes, Converter={StaticResource BoolToVisibility}}">
+                    <Grid Width="8" Height="8" Margin="0,0,3,0">
+                        <Ellipse Width="8" Height="8" Fill="#44FFFFFF" />
+                        <Ellipse Width="4" Height="4" Fill="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Ellipse.RenderTransform>
+                                <TranslateTransform X="{Binding PupilOffsetX}" Y="{Binding PupilOffsetY}" />
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Grid>
+                    <Grid Width="8" Height="8">
+                        <Ellipse Width="8" Height="8" Fill="#44FFFFFF" />
+                        <Ellipse Width="4" Height="4" Fill="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Ellipse.RenderTransform>
+                                <TranslateTransform X="{Binding PupilOffsetX}" Y="{Binding PupilOffsetY}" />
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Grid>
+                </StackPanel>
             </Grid>
 
             <!-- Minimal: lingkaran dengan satu titik aksen. -->

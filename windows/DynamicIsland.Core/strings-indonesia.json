@@ -284,5 +284,19 @@
   "assistant.offline": { "serius": "Tidak bisa menghubungi endpoint.", "kocak": "Endpoint-nya tidak bisa dihubungi." },
   "screenshot.saved": { "serius": "Tangkapan layar disimpan", "kocak": "Tangkapan layar disimpan" },
   "screenshot.failed": { "serius": "Tangkapan layar gagal", "kocak": "Tangkapan layar gagal" },
-  "terminal.confirm": { "serius": "Jalankan perintah ini?", "kocak": "Jalankan perintah ini?" }
+  "terminal.confirm": { "serius": "Jalankan perintah ini?", "kocak": "Jalankan perintah ini?" },
+
+  "humor.tickle": { "serius": "Klik berkali-kali", "kocak": "Aduh, geli." },
+  "humor.sulk": { "serius": "Timer masih berjalan", "kocak": "Halo? Masih hidup?" },
+  "humor.repeat": { "serius": "Lagu diputar berulang", "kocak": "Lagu ini lagi? Aku sampai hafal." },
+  "humor.easter": { "serius": "Rahasia", "kocak": "Kamu menemukan sesuatu!" },
+
+  "settings.humorBehaviors": { "serius": "Perilaku kocak", "kocak": "Tingkah lucu" },
+  "settings.humorBehaviorsNote": { "serius": "Fitur visual dan teks lucu saat idle atau interaksi. Bisa dimatikan satu per satu.", "kocak": "Tingkah-tingkah lucu kapsul. Matikan yang mengganggu." },
+  "settings.humorEyes": { "serius": "Mata kapsul mengikuti kursor", "kocak": "Mata ngikutin kursor" },
+  "settings.humorTickle": { "serius": "Klik berkali-kali bergoyang", "kocak": "Klik berkali-kali geli" },
+  "settings.humorSulk": { "serius": "Kapsul ngambek saat diabaikan", "kocak": "Kapsul ngambek" },
+  "settings.humorRepeat": { "serius": "Komentar lagu berulang", "kocak": "Komentari lagu berulang" },
+  "settings.humorDrama": { "serius": "Hitung mundur drama 10 detik", "kocak": "Hitung mundur dramatis" },
+  "settings.humorEaster": { "serius": "Telur paskah", "kocak": "Telur paskah" }
 }

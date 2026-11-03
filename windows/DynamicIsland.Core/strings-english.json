@@ -283,5 +283,19 @@
   "assistant.offline": { "serius": "Could not reach the endpoint.", "kocak": "Could not reach the endpoint." },
   "screenshot.saved": { "serius": "Screenshot saved", "kocak": "Screenshot saved" },
   "screenshot.failed": { "serius": "Screenshot failed", "kocak": "Screenshot failed" },
-  "terminal.confirm": { "serius": "Run this command?", "kocak": "Run this command?" }
+  "terminal.confirm": { "serius": "Run this command?", "kocak": "Run this command?" },
+
+  "humor.tickle": { "serius": "Rapid clicks", "kocak": "Ouch, that tickles." },
+  "humor.sulk": { "serius": "Timer still running", "kocak": "Hello? Still alive?" },
+  "humor.repeat": { "serius": "Track on repeat", "kocak": "This song again? I know it by heart." },
+  "humor.easter": { "serius": "Secret", "kocak": "You found something!" },
+
+  "settings.humorBehaviors": { "serius": "Humour behaviours", "kocak": "Silly behaviours" },
+  "settings.humorBehaviorsNote": { "serius": "Visual and text fun when idle or interacting. Each one can be toggled off.", "kocak": "Silly capsule tricks. Turn off whatever bugs you." },
+  "settings.humorEyes": { "serius": "Eyes follow cursor", "kocak": "Eyes follow cursor" },
+  "settings.humorTickle": { "serius": "Shake on rapid clicks", "kocak": "Tickle on rapid clicks" },
+  "settings.humorSulk": { "serius": "Sulk when ignored", "kocak": "Sulk when ignored" },
+  "settings.humorRepeat": { "serius": "Comment on repeated track", "kocak": "Comment on repeated track" },
+  "settings.humorDrama": { "serius": "Dramatic last 10 seconds", "kocak": "Dramatic last 10 seconds" },
+  "settings.humorEaster": { "serius": "Easter egg", "kocak": "Easter egg" }
 }

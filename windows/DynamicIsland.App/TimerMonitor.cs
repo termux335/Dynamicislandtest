@@ -33,9 +33,15 @@ public sealed class TimerMonitor : IDisposable
     /// <summary>Dipicu setiap kali sesi fokus 25 menit dimulai (untuk musik fokus).</summary>
     public event Action? FocusStarted;
 
+    public Func<TimeSpan>? IdleDurationProvider { get; set; }
+
     public bool IsActive => engine.IsActive;
 
     public bool IsRunning => engine.IsRunning;
+
+    public TimeSpan Remaining => engine.Remaining;
+
+    public TimeSpan Elapsed => engine.Elapsed;
 
     public void Start() => timer.Start();
 
@@ -103,6 +109,15 @@ public sealed class TimerMonitor : IDisposable
         {
             Remove();
             return;
+        }
+
+        if (text.Humor == HumorMode.Kocak && engine.IsRunning && IdleDurationProvider is not null)
+        {
+            var idle = IdleDurationProvider();
+            if (SulkingDetector.IsSulking(engine.IsRunning, engine.Elapsed, idle))
+            {
+                activity = activity with { Subtitle = text.Get("humor.sulk") };
+            }
         }
 
         if (!force && activity.Title == lastTitle && activity.Subtitle == lastSubtitle) return;

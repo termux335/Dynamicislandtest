@@ -111,7 +111,7 @@ minimal <-> compact <-> expanded
 | Compact rapat        | 300 x 36 px     |                                          |
 | Expanded notifikasi  | 312 x 84 px     | radius 28                                |
 | Shelf                | 312 x 84 px     | garis putus-putus                        |
-| Aksi cepat           | 312 x 64 px     | tekan-tahan                              |
+| Aksi cepat           | 312 x 64 px     | tekan-tahan, dapat dikustomisasi di quick-actions.json |
 
 Posisi: di tengah atas layar utama. Windows tidak punya notch, jadi kapsul
 selalu mengambang dengan jarak 8 px dari tepi atas layar.

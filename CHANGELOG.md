@@ -21,7 +21,15 @@ Tahap 5c: modul opsional dan penutup Tahap 5.
 - SDK plugin lokal dengan manifest dan izin terbatas.
 - Visualizer kartu media dan warna aksen dari sampul album, plus pemilih jam
   tenang dan playlist fokus di Pengaturan.
-- 11 tes baru untuk parser 5c dan persistensi (total 277).
+- Perilaku Mode Kocak lengkap sesuai CLAUDE.windows.md: mata kapsul mengikuti gerak
+  kursor saat idle, goyang pegas 5 klik cepat ("Aduh, geli."), kapsul ngambek setelah
+  10 menit diabaikan saat timer jalan ("Halo? Masih hidup?"), deteksi lagu berulang
+  3 kali berturut-turut ("Lagu ini lagi? Aku sampai hafal."), hitung mundur drama
+  10 detik terakhir berdenyut, dan telur paskah.
+- Saklar per perilaku Mode Kocak di jendela Pengaturan.
+- Aksi cepat fleksibel dan dapat dikustomisasi lewat `quick-actions.json`.
+- Skrip Inno Setup 6 (`windows/installer.iss`) untuk pembuatan installer desktop mandiri.
+- 41 tes baru untuk parser 5c, perilaku kocak, dan persistensi (total 307).
 
 ### Changed
 

@@ -115,8 +115,11 @@ public partial class App : Application, IDisposable
             TickerUrl = stage5C.TickerUrl ?? string.Empty,
             AssistantEnabled = stage5C.AssistantEnabled,
             PluginsEnabled = stage5C.PluginsEnabled,
+            HumorBehaviors = settings.HumorBehaviors ?? new HumorSettings(),
         };
         this.model = model;
+        var quickActions = new QuickActionStore();
+        if (quickActions.Load()) model.SetQuickActions(quickActions.ActionIds);
 
         var timer = new TimerMonitor(controller, Dispatcher, text);
         var media = new MediaMonitor(controller, Dispatcher, text);
@@ -280,6 +283,7 @@ public partial class App : Application, IDisposable
 
         idleWatcher = new IdleWatcher(Dispatcher);
         idleWatcher.Start();
+        timer.IdleDurationProvider = () => idleWatcher.Idle;
 
         oledTimer = new DispatcherTimer(
             TimeSpan.FromSeconds(5),
@@ -324,6 +328,7 @@ public partial class App : Application, IDisposable
         window.ShortcutsRequested += OpenShortcuts;
         window.NotesRequested += OpenNotes;
         window.VoiceRequested += OpenVoiceNote;
+        window.ScreenshotRequested += CaptureScreenshot;
 
         // Kamera tidak boleh hidup saat island menciut atau disembunyikan.
         controller.Changed += presentation =>
@@ -1042,7 +1047,8 @@ public partial class App : Application, IDisposable
                 TickerUrl = model.TickerUrl,
                 AssistantEnabled = model.AssistantEnabled,
                 PluginsEnabled = model.PluginsEnabled,
-            });
+            },
+            HumorBehaviors: model.HumorBehaviors);
 
         if (!SettingsStore.Save(settings)) Log.Write("pengaturan: gagal disimpan");
 

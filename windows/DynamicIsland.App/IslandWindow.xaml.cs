@@ -44,6 +44,10 @@ public partial class IslandWindow : Window
     private int oledOffsetX;
     private int oledOffsetY;
     private double accessibilityScale = 1;
+    private readonly TickleDetector tickleDetector = new();
+    private readonly EasterEggSequence easterEgg = new("island");
+    private DispatcherTimer? tickleWobbleTimer;
+    private DateTime tickleWobbleStarted;
 
     public IslandWindow(
         IslandViewModel model,
@@ -112,6 +116,8 @@ public partial class IslandWindow : Window
 
     public event Action? VoiceRequested;
 
+    public event Action? ScreenshotRequested;
+
     private void Notes_Click(object sender, RoutedEventArgs e) => NotesRequested?.Invoke();
 
     private void Voice_Click(object sender, RoutedEventArgs e) => VoiceRequested?.Invoke();
@@ -148,6 +154,35 @@ public partial class IslandWindow : Window
     /// </summary>
     private void AnimateVisualizer()
     {
+        if (model.ShowCapsuleEyes)
+        {
+            var (cx, cy) = CursorInDip();
+            var centerX = Left + (ActualWidth > 0 ? ActualWidth / 2 : 17);
+            var centerY = Top + (ActualHeight > 0 ? ActualHeight / 2 : 17);
+            var (ox, oy) = EyeGaze.Calculate(centerX, centerY, cx, cy);
+            model.UpdatePupils(ox, oy);
+        }
+
+        if (model.IsHumorKocak && (model.HumorBehaviors?.DramaticCountdown ?? true) && timer.IsRunning)
+        {
+            var remaining = timer.Remaining;
+            if (DramaTimer.IsDramatic(remaining))
+            {
+                var freq = DramaTimer.PulseFrequency(remaining);
+                var pulseSeconds = DateTime.UtcNow.Ticks / (double)TimeSpan.TicksPerSecond;
+                var pulseScale = 1.0 + (0.04 * Math.Sin(pulseSeconds * freq * 2 * Math.PI));
+                Capsule.RenderTransform = new ScaleTransform(pulseScale, pulseScale, ActualWidth / 2, ActualHeight / 2);
+            }
+            else if (Capsule.RenderTransform is ScaleTransform)
+            {
+                Capsule.RenderTransform = null;
+            }
+        }
+        else if (Capsule.RenderTransform is ScaleTransform)
+        {
+            Capsule.RenderTransform = null;
+        }
+
         var active = model.Visualizer && model.IsMedia && model.MediaPlaying && model.ShowsMediaCard;
         var visibility = active ? Visibility.Visible : Visibility.Collapsed;
 
@@ -373,6 +408,17 @@ public partial class IslandWindow : Window
     {
         if (FindAncestor<Button>(e.OriginalSource as DependencyObject) is not null) return;
 
+        if (model.IsHumorKocak && (model.HumorBehaviors?.Tickle ?? true))
+        {
+            if (tickleDetector.RegisterClick(DateTimeOffset.UtcNow))
+            {
+                longPressTimer.Stop();
+                TriggerTickle();
+                e.Handled = true;
+                return;
+            }
+        }
+
         // Mulai hitung tekan-tahan; klik biasa berhenti di MouseLeftButtonUp.
         longPressFired = false;
         longPressTimer.Stop();
@@ -594,6 +640,11 @@ public partial class IslandWindow : Window
                 case "media-toggle": media.TogglePlayPause(); break;
                 case "media-next": media.Next(); break;
                 case "timer-focus": timer.StartFocus(); break;
+                case "timer-stopwatch": timer.StartStopwatch(); break;
+                case "screenshot": ScreenshotRequested?.Invoke(); break;
+                case "camera": CameraRequested?.Invoke(); break;
+                case "notes": NotesRequested?.Invoke(); break;
+                case "clipboard": ClipboardRequested?.Invoke(); break;
             }
 
             model.CloseQuickActions();
@@ -666,6 +717,17 @@ public partial class IslandWindow : Window
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (model.IsHumorKocak && (model.HumorBehaviors?.EasterEgg ?? true))
+        {
+            var keyStr = e.Key.ToString();
+            if (keyStr.Length == 1 && easterEgg.RegisterKey(keyStr[0], DateTimeOffset.UtcNow))
+            {
+                TriggerEasterEgg();
+                e.Handled = true;
+                return;
+            }
+        }
+
         switch (e.Key)
         {
             case Key.Escape when model.IsQuickActionsOpen:
@@ -685,6 +747,51 @@ public partial class IslandWindow : Window
                 e.Handled = true;
                 break;
         }
+    }
+
+
+    private void TriggerTickle()
+    {
+        Log.Write("humor: geli (5 klik cepat)");
+        controller.Refresh(new DynamicIsland.Core.Activity(
+            id: "humor-tickle",
+            kind: DynamicIsland.Core.ActivityKind.Notification,
+            title: model.Text.Get("humor.tickle"),
+            isLive: false,
+            expiresAt: DateTimeOffset.Now.AddSeconds(3)));
+
+        tickleWobbleStarted = DateTime.UtcNow;
+        tickleWobbleTimer?.Stop();
+        tickleWobbleTimer = new DispatcherTimer(
+            TimeSpan.FromMilliseconds(16),
+            DispatcherPriority.Render,
+            (_, _) =>
+            {
+                var elapsed = (DateTime.UtcNow - tickleWobbleStarted).TotalMilliseconds;
+                if (elapsed >= 450)
+                {
+                    tickleWobbleTimer?.Stop();
+                    Capsule.RenderTransform = null;
+                    return;
+                }
+
+                var decay = 1.0 - (elapsed / 450.0);
+                var offset = 6.0 * decay * Math.Sin(elapsed * 0.05);
+                Capsule.RenderTransform = new TranslateTransform(offset, 0);
+            },
+            Dispatcher);
+        tickleWobbleTimer.Start();
+    }
+
+    private void TriggerEasterEgg()
+    {
+        Log.Write("humor: telur paskah ditemukan!");
+        controller.Refresh(new DynamicIsland.Core.Activity(
+            id: "humor-easter",
+            kind: DynamicIsland.Core.ActivityKind.Notification,
+            title: model.Text.Get("humor.easter"),
+            isLive: false,
+            expiresAt: DateTimeOffset.Now.AddSeconds(3)));
     }
 
     private void Action_Click(object sender, RoutedEventArgs e)

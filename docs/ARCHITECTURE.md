@@ -25,10 +25,12 @@ DynamicIsland.Core (net8.0, tanpa UI)
   ├── Scenarios, Habits, PrayerTimes, WeatherAlert, OledGuard
   ├── ClipboardSafety, Calculator, Palette, Osd   modul Tahap 5a
   ├── Notes, Presence, VoiceNotes, Accessibility   modul Tahap 5b
+  ├── Stage5C                                     modul Tahap 5c
+  ├── HumorBehaviors, QuickActions                perilaku kocak & aksi cepat
   └── Strings, Lyrics, LyricsFiles
         ▲
         │ dites oleh
-DynamicIsland.Core.Tests (xunit, 264 tes)
+DynamicIsland.Core.Tests (xunit, 307 tes)
 ```
 
 Aturan pemisahan: **Core tidak boleh menyentuh WPF atau P/Invoke.** Semua yang
@@ -125,6 +127,7 @@ Saklar modul (konteks, berbagi aman, kebiasaan, salat, cuaca, OLED) disimpan di
 | `OsdTests` | format dan throttle tampilan volume/kecerahan |
 | `Stage5BTests` | catatan, pengingat, tunda mengetik, jam tenang, fokus, aksesibilitas, warna sampul |
 | `Stage5CTests` | status agen, terminal, RSS, asisten, manifest plugin |
+| `HumorBehaviorsTests` | perilaku kocak (mata idle, geli, ngambek, lagu berulang, drama timer, telur paskah) dan kustomisasi aksi cepat |
 
 Menambah perilaku baru berarti menambah tes di salah satu berkas ini; tes
 prioritas dan transisi state wajib ada sebelum UI-nya.
