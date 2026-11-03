@@ -9,7 +9,8 @@ public sealed record IslandPresentation(
     ResponseLevel ResponseLevel = ResponseLevel.Normal,
     bool Visible = true,
     bool ClickThrough = false,
-    double Opacity = 1);
+    double Opacity = 1,
+    bool QuietHours = false);
 
 /// <summary>
 /// Inti logika Dynamic Island. Bebas dari UI supaya bisa dites tanpa WPF.
@@ -54,6 +55,20 @@ public sealed class IslandController
 
     /// <summary>Kembali ke tampilan normal (fitur dimatikan atau keluar dari konteks).</summary>
     public void ClearContext() => SetContext(ContextResolution.NormalContext);
+
+    private bool quietHours;
+
+    /// <summary>Jam tenang (Tahap 5b): redup dan hanya peringatan kritis.</summary>
+    public bool QuietHours => quietHours;
+
+    public bool SetQuietHours(bool enabled)
+    {
+        if (quietHours == enabled) return false;
+
+        quietHours = enabled;
+        Publish();
+        return true;
+    }
 
     private DisplayMode displayMode = DisplayMode.Standar;
 
@@ -297,7 +312,7 @@ public sealed class IslandController
         var primary = Queue.Primary;
         var secondary = ShowsSecondary ? Queue.Secondary : null;
 
-        if (effect.CriticalOnly)
+        if (effect.CriticalOnly || quietHours)
         {
             primary = primary is { } candidate && ContextRules.IsCritical(candidate) ? candidate : null;
             secondary = null;
@@ -322,7 +337,8 @@ public sealed class IslandController
             ResponseLevel: contextResolution.Level,
             Visible: effect.Visible,
             ClickThrough: effect.ClickThrough,
-            Opacity: effect.Opacity);
+            Opacity: quietHours ? Math.Min(effect.Opacity, QuietHoursRules.Opacity) : effect.Opacity,
+            QuietHours: quietHours);
 
         if (next == Presentation) return;
 

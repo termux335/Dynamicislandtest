@@ -5,15 +5,23 @@ timer, rapat, notifikasi, dan aktivitas lain — lalu ciut sendiri saat tidak
 dibutuhkan. Windows tidak punya notch, jadi kapsulnya melayang 8 px dari tepi
 atas.
 
-Status: **0.4.0-beta**. Fitur Tahap 1–4 sudah dipakai harian, termasuk mode tidak
-mengganggu (game, video layar penuh, rapat, berbagi layar), mode berbagi layar
-aman, jadwal salat lokal, peringatan cuaca BMKG opsional, pengingat kebiasaan,
-skenario otomatis, dan pelindung layar OLED.
+Status: **0.6.0-beta**. Fitur Tahap 1–4 sudah dipakai harian, termasuk mode tidak
+mengganggu, berbagi layar aman, jadwal salat lokal, peringatan cuaca BMKG
+opsional, pengingat kebiasaan, skenario otomatis, dan pelindung layar OLED.
 
-Tahap 5a sudah tersedia: riwayat clipboard aman (data sensitif disamarkan,
-memori saja), command palette dengan kalkulator dan konversi satuan offline,
-cermin kamera sementara, tampilan volume/kecerahan, dan pintasan aplikasi.
-Tahap 5b–5c belum dikerjakan. Belum ditandatangani dan belum ada installer MSIX.
+Tahap 5a sudah tersedia: riwayat clipboard aman, command palette dengan
+kalkulator dan konversi offline, cermin kamera sementara, tampilan
+volume/kecerahan, dan pintasan aplikasi.
+
+Tahap 5b juga sudah tersedia: catatan/snippet lokal, catatan suara dengan
+pengingat, tunda notifikasi saat mengetik tanpa merekam ketikan, jam tenang
+otomatis, musik fokus dari playlist pilihan sendiri, serta aksesibilitas
+(bacakan notifikasi, teks besar, kontras tinggi, keyboard).
+Tahap 5c juga sudah tersedia: status agen AI dari berkas lokal, terminal dengan
+perintah terdaftar, tangkapan layar, ticker RSS opsional, asisten AI dengan kunci
+sendiri, dan SDK plugin lokal. Rekaman layar belum termasuk. Visualizer dan warna
+sampul album sudah tampil, tetapi visualizer bersifat dekoratif. Belum
+ditandatangani dan belum ada installer MSIX.
 
 Kontrol tanpa keluar dari game: **Ctrl+Alt+Spasi** putar/jeda, **Ctrl+Alt+N**
 lagu berikutnya, **Ctrl+Alt+M** bisukan mikrofon, **Ctrl+Alt+V** command palette.

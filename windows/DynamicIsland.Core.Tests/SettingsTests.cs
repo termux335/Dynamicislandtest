@@ -55,6 +55,49 @@ public class SettingsTests : IDisposable
     }
 
     [Fact]
+    public void Stage5BSwitchesSurviveARoundTripWithoutTouchingOtherModules()
+    {
+        var saved = new IslandSettings(Stage5B: new Stage5BSettings(
+            NotesEnabled: false,
+            QuietHoursEnabled: true,
+            LargeText: true,
+            FocusMusic: "https://music.example.com/fokus"));
+
+        Assert.True(SettingsStore.Save(saved, Path_));
+
+        var loaded = SettingsStore.Load(Path_);
+
+        Assert.NotNull(loaded.Stage5B);
+        Assert.False(loaded.Stage5B!.NotesEnabled);
+        Assert.True(loaded.Stage5B.QuietHoursEnabled);
+        Assert.True(loaded.Stage5B.LargeText);
+        Assert.Equal("https://music.example.com/fokus", loaded.Stage5B.FocusMusic);
+        Assert.True(loaded.SafeShare);
+    }
+
+    [Fact]
+    public void Stage5CSwitchesSurviveARoundTripAndKeepInternetDefaultsOff()
+    {
+        var saved = new IslandSettings(Stage5C: new Stage5CSettings(
+            AgentStatusEnabled: true,
+            TickerEnabled: true,
+            TickerUrl: "https://example.com/rss",
+            ScreenshotEnabled: false));
+
+        Assert.True(SettingsStore.Save(saved, Path_));
+
+        var loaded = SettingsStore.Load(Path_);
+
+        Assert.NotNull(loaded.Stage5C);
+        Assert.True(loaded.Stage5C!.AgentStatusEnabled);
+        Assert.True(loaded.Stage5C.TickerEnabled);
+        Assert.Equal("https://example.com/rss", loaded.Stage5C.TickerUrl);
+        Assert.False(loaded.Stage5C.ScreenshotEnabled);
+        Assert.False(loaded.Stage5C.AssistantEnabled);
+        Assert.True(loaded.SafeShare);
+    }
+
+    [Fact]
     public void SaveCreatesTheFolder()
     {
         Assert.True(SettingsStore.Save(new IslandSettings(), Path_));

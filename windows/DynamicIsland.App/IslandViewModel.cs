@@ -279,6 +279,298 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         }
     }
 
+    private bool notesEnabled = true;
+
+    public bool NotesEnabled
+    {
+        get => notesEnabled;
+        set
+        {
+            if (notesEnabled == value) return;
+            notesEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool typingDeferral = true;
+
+    public bool TypingDeferral
+    {
+        get => typingDeferral;
+        set
+        {
+            if (typingDeferral == value) return;
+            typingDeferral = value;
+            RaiseAll();
+        }
+    }
+
+    private bool quietHoursEnabled;
+
+    public bool QuietHoursEnabled
+    {
+        get => quietHoursEnabled;
+        set
+        {
+            if (quietHoursEnabled == value) return;
+            quietHoursEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool voiceNotes;
+
+    public bool VoiceNotes
+    {
+        get => voiceNotes;
+        set
+        {
+            if (voiceNotes == value) return;
+            voiceNotes = value;
+            RaiseAll();
+        }
+    }
+
+    private bool speakNotifications;
+
+    public bool SpeakNotifications
+    {
+        get => speakNotifications;
+        set
+        {
+            if (speakNotifications == value) return;
+            speakNotifications = value;
+            RaiseAll();
+        }
+    }
+
+    private bool largeText;
+
+    public bool LargeText
+    {
+        get => largeText;
+        set
+        {
+            if (largeText == value) return;
+            largeText = value;
+            RaiseAll();
+        }
+    }
+
+    private bool highContrast;
+
+    public bool HighContrast
+    {
+        get => highContrast;
+        set
+        {
+            if (highContrast == value) return;
+            highContrast = value;
+            RaiseAll();
+        }
+    }
+
+    /// <summary>Skala teks/aksibilitas; jendela ikut membesar.</summary>
+    public double AccessibilityScale => largeText ? 1.25 : 1;
+
+    private bool albumColor;
+
+    /// <summary>Warna aksen mengikuti sampul album yang sedang diputar.</summary>
+    public bool AlbumColor
+    {
+        get => albumColor;
+        set
+        {
+            if (albumColor == value) return;
+            albumColor = value;
+            RaiseAll();
+        }
+    }
+
+    private bool visualizer = true;
+
+    public bool Visualizer
+    {
+        get => visualizer;
+        set
+        {
+            if (visualizer == value) return;
+            visualizer = value;
+            RaiseAll();
+        }
+    }
+
+    private int quietStartHour = 22;
+
+    public int QuietStartHour
+    {
+        get => quietStartHour;
+        set
+        {
+            var next = Math.Clamp(value, 0, 23);
+            if (quietStartHour == next) return;
+            quietStartHour = next;
+            RaiseAll();
+        }
+    }
+
+    private int quietEndHour = 7;
+
+    public int QuietEndHour
+    {
+        get => quietEndHour;
+        set
+        {
+            var next = Math.Clamp(value, 0, 23);
+            if (quietEndHour == next) return;
+            quietEndHour = next;
+            RaiseAll();
+        }
+    }
+
+    private string focusMusic = string.Empty;
+
+    /// <summary>Path/URL playlist fokus pilihan pengguna; kosong berarti tidak diputar.</summary>
+    public string FocusMusic
+    {
+        get => focusMusic;
+        set
+        {
+            var next = value ?? string.Empty;
+            if (focusMusic == next) return;
+            focusMusic = next;
+            RaiseAll();
+        }
+    }
+
+    public string LabelStage5B => text.Get("settings.stage5b");
+
+    public string LabelNotes => text.Get("settings.notes");
+
+    public string LabelTyping => text.Get("settings.typing");
+
+    public string LabelTypingNote => text.Get("settings.typingNote");
+
+    public string LabelQuiet => text.Get("settings.quiet");
+
+    public string LabelQuietNote => text.Get("settings.quietNote");
+
+    public string LabelVoice => text.Get("settings.voice");
+
+    public string LabelVoiceNote => text.Get("settings.voiceNote");
+
+    public string LabelSpeak => text.Get("settings.speak");
+
+    public string LabelSpeakNote => text.Get("settings.speakNote");
+
+    public string LabelLargeText => text.Get("settings.largeText");
+
+    public string LabelContrast => text.Get("settings.contrast");
+
+    public string LabelAccessibilityNote => text.Get("settings.accessibilityNote");
+
+    public string LabelAlbumColor => text.Get("settings.albumColor");
+
+    public string LabelAlbumColorNote => text.Get("settings.albumColorNote");
+
+    public string LabelVisualizer => text.Get("settings.visualizer");
+
+    public string LabelFocusMusic => text.Get("settings.focusMusic");
+
+    public string LabelFocusMusicNote => text.Get("settings.focusMusicNote");
+
+    public string LabelQuietHoursRange => text.Get("settings.quietHoursRange");
+
+    public string LabelBrowse => text.Get("settings.browse");
+
+    private bool agentStatusEnabled;
+
+    public bool AgentStatusEnabled
+    {
+        get => agentStatusEnabled;
+        set { if (agentStatusEnabled == value) return; agentStatusEnabled = value; RaiseAll(); }
+    }
+
+    private bool terminalEnabled;
+
+    public bool TerminalEnabled
+    {
+        get => terminalEnabled;
+        set { if (terminalEnabled == value) return; terminalEnabled = value; RaiseAll(); }
+    }
+
+    private bool screenshotEnabled = true;
+
+    public bool ScreenshotEnabled
+    {
+        get => screenshotEnabled;
+        set { if (screenshotEnabled == value) return; screenshotEnabled = value; RaiseAll(); }
+    }
+
+    private bool tickerEnabled;
+
+    public bool TickerEnabled
+    {
+        get => tickerEnabled;
+        set { if (tickerEnabled == value) return; tickerEnabled = value; RaiseAll(); }
+    }
+
+    private string tickerUrl = string.Empty;
+
+    public string TickerUrl
+    {
+        get => tickerUrl;
+        set { var next = value ?? string.Empty; if (tickerUrl == next) return; tickerUrl = next; RaiseAll(); }
+    }
+
+    private bool assistantEnabled;
+
+    public bool AssistantEnabled
+    {
+        get => assistantEnabled;
+        set { if (assistantEnabled == value) return; assistantEnabled = value; RaiseAll(); }
+    }
+
+    private bool pluginsEnabled;
+
+    public bool PluginsEnabled
+    {
+        get => pluginsEnabled;
+        set { if (pluginsEnabled == value) return; pluginsEnabled = value; RaiseAll(); }
+    }
+
+    public string LabelStage5C => text.Get("settings.stage5c");
+
+    public string LabelAgentStatus => text.Get("settings.agentStatus");
+
+    public string LabelAgentStatusNote => text.Get("settings.agentStatusNote");
+
+    public string LabelTerminal => text.Get("settings.terminal");
+
+    public string LabelTerminalNote => text.Get("settings.terminalNote");
+
+    public string LabelScreenshot => text.Get("settings.screenshot");
+
+    public string LabelScreenshotNote => text.Get("settings.screenshotNote");
+
+    public string LabelTicker => text.Get("settings.ticker");
+
+    public string LabelTickerNote => text.Get("settings.tickerNote");
+
+    public string LabelTickerUrl => text.Get("settings.tickerUrl");
+
+    public string LabelAssistant => text.Get("settings.assistant");
+
+    public string LabelAssistantNote => text.Get("settings.assistantNote");
+
+    public string LabelPlugins => text.Get("settings.plugins");
+
+    public string LabelPluginsNote => text.Get("settings.pluginsNote");
+
+    public string MenuNotes => text.Get("menu.notes");
+
+    public string MenuVoice => text.Get("menu.voice");
+
     private IReadOnlyList<Shortcut> shortcuts = Array.Empty<Shortcut>();
 
     /// <summary>Pintasan aplikasi/folder yang didaftarkan pengguna (Tahap 5a).</summary>

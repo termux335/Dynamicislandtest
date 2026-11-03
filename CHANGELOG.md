@@ -4,6 +4,66 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan
 [Semantic Versioning](https://semver.org/lang/id/). Semua perubahan yang terlihat
 pengguna dicatat di sini; detail teknis ada di riwayat git.
 
+## [0.6.0-beta] - 2026-11-03
+
+Tahap 5c: modul opsional dan penutup Tahap 5.
+
+### Added
+
+- Status agen AI coding dari `agent-status.json`: state, token terpakai, dan
+  tombol Setujui/Tolak yang menulis `agent-response.json`. Tanpa kunci API.
+- Terminal cepat: hanya perintah di `commands.json`, dijalankan dari palette
+  setelah konfirmasi, tanpa shell dan tanpa sumber luar.
+- Tangkapan layar ke `Pictures\\DynamicIsland` dari palette.
+- Ticker RSS/Atom opsional, mati bawaan, hanya judul/tautan, gagal tampil jelas.
+- Asisten AI opsional (OpenAI-compatible): kunci hanya di memori, pengiriman
+  hanya saat tombol Kirim ditekan.
+- SDK plugin lokal dengan manifest dan izin terbatas.
+- Visualizer kartu media dan warna aksen dari sampul album, plus pemilih jam
+  tenang dan playlist fokus di Pengaturan.
+- 11 tes baru untuk parser 5c dan persistensi (total 277).
+
+### Changed
+
+- Versi naik ke `0.6.0-beta`; preferensi 5c disimpan di `Stage5C`.
+- Tahap 5b tidak lagi menyisakan utang UI.
+
+### Known limitations
+
+- Rekaman layar belum ada; hanya tangkapan layar.
+- Plugin berjalan in-process dan belum punya sandbox penuh.
+
+## [0.5.0-beta] - 2026-11-03
+
+Tahap 5b: produktivitas, kenyamanan, dan aksesibilitas.
+
+### Added
+
+- Catatan dan snippet lokal (`notes.json`): tambah lewat palette (`catat …`),
+  cari, salin, dan pengingat lewat catatan suara.
+- Catatan suara: satu ucapan di perangkat, teks bisa diedit sebelum disimpan;
+  "ingatkan 10 menit …" menjadi pengingat. Bila pengenalan suara gagal,
+  alasannya tampil dan catatan tetap bisa diketik.
+- Tunda notifikasi saat mengetik: hanya memakai waktu input terakhir, tanpa hook
+  keyboard dan tanpa menyimpan isi ketikan; notifikasi dilepas setelah berhenti.
+- Jam tenang otomatis: kapsul redup (65%) dan hanya peringatan kritis lewat.
+- Musik fokus: playlist pilihan pengguna diputar saat sesi fokus dimulai; app
+  tidak membawa atau mengunduh musik.
+- Aksesibilitas: bacakan notifikasi dengan suara Windows, teks besar (1,25x),
+  kontras tinggi, dan navigasi keyboard yang sudah ada tetap berlaku.
+- 19 tes baru untuk catatan, pengingat, tunda mengetik, jam tenang, musik fokus,
+  catatan suara, dan warna sampul (total 264).
+
+### Changed
+
+- Versi naik ke `0.5.0-beta`; preferensi Tahap 5b disimpan di `Stage5B` pada
+  `settings.json` tanpa mengubah modul Tahap 1-5a.
+
+### Known limitations
+
+- Visualizer musik dan warna sampul album yang sudah dihitung di Core belum
+  dipasang ke UI; menunggu tahap berikutnya.
+
 ## [0.4.0-beta] - 2026-11-03
 
 Tahap 5a: modul harian yang berdiri sendiri.

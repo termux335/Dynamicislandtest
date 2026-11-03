@@ -30,6 +30,9 @@ public sealed class TimerMonitor : IDisposable
             dispatcher);
     }
 
+    /// <summary>Dipicu setiap kali sesi fokus 25 menit dimulai (untuk musik fokus).</summary>
+    public event Action? FocusStarted;
+
     public bool IsActive => engine.IsActive;
 
     public bool IsRunning => engine.IsRunning;
@@ -41,6 +44,7 @@ public sealed class TimerMonitor : IDisposable
         engine.StartCountdown(TimerEngine.PomodoroLength);
         Log.Write("timer: fokus 25 menit dimulai");
         Sync(force: true);
+        FocusStarted?.Invoke();
     }
 
     public void StartStopwatch()

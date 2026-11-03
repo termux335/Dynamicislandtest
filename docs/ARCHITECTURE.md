@@ -24,10 +24,11 @@ DynamicIsland.Core (net8.0, tanpa UI)
   ├── ContextAwareness, SafePlacement, AppProfiles   mode tidak mengganggu
   ├── Scenarios, Habits, PrayerTimes, WeatherAlert, OledGuard
   ├── ClipboardSafety, Calculator, Palette, Osd   modul Tahap 5a
+  ├── Notes, Presence, VoiceNotes, Accessibility   modul Tahap 5b
   └── Strings, Lyrics, LyricsFiles
         ▲
         │ dites oleh
-DynamicIsland.Core.Tests (xunit, 245 tes)
+DynamicIsland.Core.Tests (xunit, 264 tes)
 ```
 
 Aturan pemisahan: **Core tidak boleh menyentuh WPF atau P/Invoke.** Semua yang
@@ -81,6 +82,11 @@ I/O) berjalan di thread lain dan hasilnya dikembalikan lewat
 | `%TEMP%\dynamic-island.log` | log uji manual |
 | `%TEMP%\dynamic-island.ics` | kalender uji (bisa dialihkan `ISLAND_ICS`) |
 | `%APPDATA%\DynamicIsland\app-profiles.json` | posisi/opacity terakhir per aplikasi (bisa dialihkan `ISLAND_APP_PROFILES`) |
+| `%APPDATA%\DynamicIsland\agent-status.json` | status agen lokal yang ditulis alat pengguna |
+| `%APPDATA%\DynamicIsland\agent-response.json` | jawaban setuju/tolak untuk alat agen |
+| `%APPDATA%\DynamicIsland\commands.json` | perintah terminal yang didaftarkan pengguna |
+| `%APPDATA%\DynamicIsland\plugins\*\plugin.json` | manifest plugin dan izin yang diminta |
+| `Pictures\DynamicIsland\*.png` | hasil tangkapan layar |
 
 ## Mode tidak mengganggu (Tahap 4)
 
@@ -117,6 +123,8 @@ Saklar modul (konteks, berbagi aman, kebiasaan, salat, cuaca, OLED) disimpan di
 | `ClipboardSafetyTests` | penyamaran kartu/Luhn/password/token, retensi, pencarian |
 | `CalculatorTests`, `PaletteTests` | aritmetika, persen, konversi satuan, pencarian palette |
 | `OsdTests` | format dan throttle tampilan volume/kecerahan |
+| `Stage5BTests` | catatan, pengingat, tunda mengetik, jam tenang, fokus, aksesibilitas, warna sampul |
+| `Stage5CTests` | status agen, terminal, RSS, asisten, manifest plugin |
 
 Menambah perilaku baru berarti menambah tes di salah satu berkas ini; tes
 prioritas dan transisi state wajib ada sebelum UI-nya.

@@ -1,5 +1,8 @@
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using DynamicIsland.Core;
 
@@ -33,6 +36,20 @@ public partial class App : Application, IDisposable
     private ShortcutStore? shortcutStore;
     private PaletteWindow? paletteWindow;
     private CameraMirrorWindow? cameraWindow;
+    private Stage5BSettings stage5B = new();
+    private Stage5CSettings stage5C = new();
+    private TerminalStore? terminalStore;
+    private AgentMonitor? agentMonitor;
+    private TickerMonitor? tickerMonitor;
+    private PluginHost? pluginHost;
+    private AssistantWindow? assistantWindow;
+    private NoteStore? noteStore;
+    private SpeechService? speech;
+    private VoiceNoteWindow? voiceWindow;
+    private DispatcherTimer? typingTimer;
+    private DispatcherTimer? quietTimer;
+    private DispatcherTimer? reminderTimer;
+    private readonly HashSet<string> announcedReminders = new();
     private IslandViewModel? model;
     private IslandWindow? window;
     private SettingsWindow? settingsWindow;
@@ -40,6 +57,7 @@ public partial class App : Application, IDisposable
     private ContextAwarenessSettings contextSettings = new();
     private string? weatherAdm4;
     private OledPhase lastOledPhase = OledPhase.Active;
+    private uint? albumRgb;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -57,9 +75,12 @@ public partial class App : Application, IDisposable
 
         contextSettings = settings.Context ?? new ContextAwarenessSettings();
         weatherAdm4 = settings.WeatherAdm4;
+        stage5B = settings.Stage5B ?? new Stage5BSettings();
+        stage5C = settings.Stage5C ?? new Stage5CSettings();
 
         var text = new IslandText(settings.Language, settings.Humor);
         Theme.Apply(settings.Accent);
+        Theme.ApplyHighContrast(stage5B.HighContrast, settings.Accent);
 
         var model = new IslandViewModel(controller, text, settings.Accent, settings.Position)
         {
@@ -75,6 +96,25 @@ public partial class App : Application, IDisposable
             PaletteEnabled = settings.PaletteEnabled,
             OsdEnabled = settings.OsdEnabled,
             MirrorEnabled = settings.MirrorEnabled,
+            NotesEnabled = stage5B.NotesEnabled,
+            TypingDeferral = stage5B.TypingDeferral,
+            QuietHoursEnabled = stage5B.QuietHoursEnabled,
+            VoiceNotes = stage5B.VoiceNotes,
+            SpeakNotifications = stage5B.SpeakNotifications,
+            LargeText = stage5B.LargeText,
+            HighContrast = stage5B.HighContrast,
+            AlbumColor = stage5B.AlbumColor,
+            Visualizer = stage5B.Visualizer,
+            QuietStartHour = stage5B.QuietStartHour,
+            QuietEndHour = stage5B.QuietEndHour,
+            FocusMusic = stage5B.FocusMusic ?? string.Empty,
+            AgentStatusEnabled = stage5C.AgentStatusEnabled,
+            TerminalEnabled = stage5C.TerminalEnabled,
+            ScreenshotEnabled = stage5C.ScreenshotEnabled,
+            TickerEnabled = stage5C.TickerEnabled,
+            TickerUrl = stage5C.TickerUrl ?? string.Empty,
+            AssistantEnabled = stage5C.AssistantEnabled,
+            PluginsEnabled = stage5C.PluginsEnabled,
         };
         this.model = model;
 
@@ -82,9 +122,12 @@ public partial class App : Application, IDisposable
         var media = new MediaMonitor(controller, Dispatcher, text);
         timerMonitor = timer;
         mediaMonitor = media;
+        media.ArtworkChanged += bytes => Dispatcher.BeginInvoke(() => ApplyArtwork(bytes));
 
         var notifications = new NotificationMonitor(controller, Dispatcher, text);
         notificationMonitor = notifications;
+        speech = new SpeechService { Enabled = stage5B.SpeakNotifications };
+        notifications.Arrived += title => speech?.Speak(title);
 
         var window = new IslandWindow(model, controller, timer, media, notifications);
         this.window = window;
@@ -107,6 +150,8 @@ public partial class App : Application, IDisposable
                 case "meeting.mic-toggle": microphoneMonitor?.ToggleMute(); break;
                 case "meeting.back": microphoneMonitor?.BackToMeeting(); break;
                 case "notification.dismiss": notifications.DismissLatest(); break;
+                case "agent.approve": agentMonitor?.Respond(true); break;
+                case "agent.reject": agentMonitor?.Respond(false); break;
                 default:
                     if (action.Id.StartsWith("shortcut:", StringComparison.Ordinal))
                     {
@@ -165,6 +210,7 @@ public partial class App : Application, IDisposable
 
         // Tahap 3: timer asli dan Now Playing sungguhan.
         timer.Start();
+        timer.FocusStarted += StartFocusMusic;
         media.Start();
 
         // Tahap 1 (sisa): rapat lewat status mikrofon, dan notifikasi Windows.
@@ -219,7 +265,7 @@ public partial class App : Application, IDisposable
         {
             StudyMode = () => model.StudyMode,
         };
-        scenarioMonitor.PlanChanged += plan => notifications.Suppress = plan.SuppressNotifications;
+        scenarioMonitor.PlanChanged += _ => UpdateTypingSuppression();
         scenarioMonitor.Start();
 
         prayerMonitor = new PrayerMonitor(controller, Dispatcher, text);
@@ -276,6 +322,8 @@ public partial class App : Application, IDisposable
         window.ClipboardClearRequested += ClearClipboard;
         window.CameraRequested += ToggleCamera;
         window.ShortcutsRequested += OpenShortcuts;
+        window.NotesRequested += OpenNotes;
+        window.VoiceRequested += OpenVoiceNote;
 
         // Kamera tidak boleh hidup saat island menciut atau disembunyikan.
         controller.Changed += presentation =>
@@ -286,6 +334,49 @@ public partial class App : Application, IDisposable
                 cameraWindow.Close();
             }
         };
+
+        // Tahap 5b: catatan, tunda saat mengetik, jam tenang, pengingat.
+        noteStore = new NoteStore();
+        if (noteStore.Load()) Log.Write($"catatan: {noteStore.All.Count} dimuat");
+
+        // Tahap 5c: status agen lokal, ticker opsional, terminal, plugin.
+        terminalStore = new TerminalStore();
+        if (terminalStore.Load()) Log.Write($"terminal: {terminalStore.All.Count} perintah dimuat");
+
+        agentMonitor = new AgentMonitor(controller, Dispatcher, text) { Enabled = model.AgentStatusEnabled };
+        agentMonitor.Start();
+
+        tickerMonitor = new TickerMonitor(controller, Dispatcher, text);
+        tickerMonitor.Configure(model.TickerEnabled, model.TickerUrl);
+        tickerMonitor.Start();
+
+        pluginHost = new PluginHost(controller);
+        pluginHost.Load(model.PluginsEnabled);
+
+        typingTimer = new DispatcherTimer(
+            TimeSpan.FromSeconds(1),
+            DispatcherPriority.Background,
+            (_, _) => UpdateTypingSuppression(),
+            Dispatcher);
+        typingTimer.Start();
+
+        quietTimer = new DispatcherTimer(
+            TimeSpan.FromSeconds(30),
+            DispatcherPriority.Background,
+            (_, _) => UpdateQuietHours(),
+            Dispatcher);
+        quietTimer.Start();
+
+        reminderTimer = new DispatcherTimer(
+            TimeSpan.FromSeconds(30),
+            DispatcherPriority.Background,
+            (_, _) => AnnounceReminders(),
+            Dispatcher);
+        reminderTimer.Start();
+
+        UpdateQuietHours();
+        UpdateTypingSuppression();
+        AnnounceReminders();
 
         if (demo) DemoEvents.Seed(controller);
     }
@@ -300,6 +391,56 @@ public partial class App : Application, IDisposable
 
         var suffix = string.IsNullOrEmpty(resolution.App) ? string.Empty : $" ({resolution.App})";
         Log.Write($"konteks: {resolution.Context} → tingkat {resolution.Level}{suffix}");
+    }
+
+    /// <summary>
+    /// Warna aksen: kontras tinggi menang, lalu sampul album bila diizinkan,
+    /// lalu pilihan pengguna.
+    /// </summary>
+    private void ApplyAccent()
+    {
+        if (model is null) return;
+
+        if (model.HighContrast || !model.AlbumColor || albumRgb is not { } rgb)
+        {
+            Theme.ApplyHighContrast(model.HighContrast, model.Accent);
+            return;
+        }
+
+        Theme.ApplyRgb(rgb);
+    }
+
+    /// <summary>Membaca sampul di UI thread, memilih warna dominan, lalu menerapkannya.</summary>
+    private void ApplyArtwork(byte[] bytes)
+    {
+        if (model is null) return;
+
+        if (bytes.Length == 0)
+        {
+            albumRgb = null;
+            ApplyAccent();
+            return;
+        }
+
+        try
+        {
+            using var stream = new MemoryStream(bytes);
+            var frame = BitmapFrame.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+            var converted = new FormatConvertedBitmap(frame, PixelFormats.Bgra32, null, 0);
+
+            var stride = converted.PixelWidth * 4;
+            var pixels = new byte[stride * converted.PixelHeight];
+            converted.CopyPixels(pixels, stride, 0);
+
+            albumRgb = AlbumColor.Choose(pixels, converted.PixelWidth, converted.PixelHeight);
+            ApplyAccent();
+        }
+        catch (Exception error) when (error is NotSupportedException or IOException or ArgumentException)
+        {
+            Log.Write("media: warna sampul gagal dibaca (" + error.Message + ")");
+            albumRgb = null;
+            ApplyAccent();
+        }
     }
 
     /// <summary>Isi notifikasi hanya disembunyikan bila pengguna mengizinkan dan layar sedang dibagikan.</summary>
@@ -332,10 +473,14 @@ public partial class App : Application, IDisposable
         osdMonitor?.SetEnabled(model.OsdEnabled);
         scenarioMonitor?.Poll();
 
-        if (notificationMonitor is not null && scenarioMonitor is not null)
-        {
-            notificationMonitor.Suppress = scenarioMonitor.Plan.SuppressNotifications;
-        }
+        if (speech is not null) speech.Enabled = model.SpeakNotifications;
+        if (agentMonitor is not null) agentMonitor.Enabled = model.AgentStatusEnabled;
+        tickerMonitor?.Configure(model.TickerEnabled, model.TickerUrl);
+        pluginHost?.Load(model.PluginsEnabled);
+        ApplyAccent();
+        UpdateTypingSuppression();
+        UpdateQuietHours();
+        AnnounceReminders();
 
         UpdatePrivacy();
     }
@@ -429,7 +574,7 @@ public partial class App : Application, IDisposable
 
         var entries = Palette.Build(query, shortcutStore?.All, clipboardHistory?.Items, labels).ToList();
 
-        var commands = new[]
+        var commands = new List<(string Id, string Label)>
         {
             (Id: "media-toggle", Label: text.Get("quickAction.mediaToggle")),
             (Id: "media-next", Label: text.Get("quickAction.mediaNext")),
@@ -438,13 +583,42 @@ public partial class App : Application, IDisposable
             (Id: "camera", Label: text.Get("menu.camera")),
         };
 
+        if (model.ScreenshotEnabled) commands.Add(("screenshot", text.Get("settings.screenshot")));
+        if (model.AssistantEnabled) commands.Add(("assistant", text.Get("settings.assistant")));
+
         var trimmed = query.Trim();
+
+        if (model.NotesEnabled && noteStore is not null)
+        {
+            const string prefix = "catat ";
+
+            if (trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && trimmed.Length > prefix.Length)
+            {
+                var noteText = trimmed[prefix.Length..].Trim();
+                entries.Insert(0, new PaletteEntry("note-add", noteText, text.Get("notes.added"), PaletteKind.Command, noteText));
+            }
+
+            foreach (var note in noteStore.Search(trimmed).Take(3))
+            {
+                entries.Add(new PaletteEntry("note:" + note.Id, note.Text, text.Get("notes.title"), PaletteKind.Clipboard, note.Text));
+            }
+        }
 
         foreach (var command in commands)
         {
             if (trimmed.Length > 0 && !command.Label.Contains(trimmed, StringComparison.OrdinalIgnoreCase)) continue;
 
             entries.Add(new PaletteEntry(command.Id, command.Label, text.Get("menu.palette"), PaletteKind.Command, string.Empty));
+        }
+
+        if (model.TerminalEnabled && terminalStore is not null)
+        {
+            foreach (var command in terminalStore.All)
+            {
+                if (trimmed.Length > 0 && !command.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase)) continue;
+
+                entries.Add(new PaletteEntry("terminal:" + command.Name, command.Name, "Terminal", PaletteKind.Command, command.Name));
+            }
         }
 
         return entries.Take(8).ToList();
@@ -479,9 +653,219 @@ public partial class App : Application, IDisposable
                     case "timer-focus": timerMonitor?.StartFocus(); break;
                     case "clipboard-clear": ClearClipboard(); break;
                     case "camera": ToggleCamera(); break;
+                    case "screenshot": CaptureScreenshot(); break;
+                    case "assistant": OpenAssistant(); break;
+                    case "note-add":
+                        if (noteStore is not null)
+                        {
+                            noteStore.Add(entry.Payload);
+                            noteStore.Save();
+                            Notify("notes.title", "notes.added");
+                        }
+                        break;
+                    default:
+                        if (entry.Id.StartsWith("terminal:", StringComparison.Ordinal))
+                        {
+                            RunTerminal(entry.Id["terminal:".Length..]);
+                        }
+                        break;
                 }
                 break;
         }
+    }
+
+    // --- Tahap 5c ---
+
+    private void CaptureScreenshot()
+    {
+        if (model is null || controller is null || !model.ScreenshotEnabled) return;
+
+        var result = ScreenshotService.Capture();
+
+        controller.Refresh(new Activity(
+            id: "screenshot-feedback",
+            kind: ActivityKind.Notification,
+            priority: 95,
+            title: model.Text.Get(result.Ok ? "screenshot.saved" : "screenshot.failed"),
+            subtitle: result.Path ?? result.Error,
+            isLive: false,
+            expiresAt: DateTimeOffset.Now.AddSeconds(6)));
+    }
+
+    /// <summary>Hanya perintah terdaftar; selalu konfirmasi bila diminta.</summary>
+    private void RunTerminal(string name)
+    {
+        if (model is null || terminalStore is null) return;
+        if (!model.TerminalEnabled)
+        {
+            Log.Write("terminal: modul dimatikan di pengaturan");
+            return;
+        }
+
+        var command = TerminalCatalog.Find(terminalStore.All, name);
+        if (command is null)
+        {
+            Log.Write($"terminal: {name} tidak terdaftar");
+            return;
+        }
+
+        if (command.Confirm)
+        {
+            var answer = MessageBox.Show(
+                $"{command.FileName} {command.Arguments}".Trim(),
+                model.Text.Get("terminal.confirm"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes) return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(command.FileName, command.Arguments)
+            {
+                UseShellExecute = false,
+            });
+
+            Log.Write($"terminal: menjalankan {command.Name}");
+        }
+        catch (Exception error) when (error is System.ComponentModel.Win32Exception or InvalidOperationException or FileNotFoundException)
+        {
+            Log.Write($"terminal: {command.Name} gagal: {error.Message}");
+        }
+    }
+
+    private void OpenAssistant()
+    {
+        if (model is null) return;
+
+        if (!model.AssistantEnabled)
+        {
+            Log.Write("asisten: modul dimatikan di pengaturan");
+            return;
+        }
+
+        if (assistantWindow is { IsVisible: true })
+        {
+            assistantWindow.Activate();
+            return;
+        }
+
+        var window = new AssistantWindow(model.Text, stage5C.AssistantEndpoint, stage5C.AssistantModel);
+
+        window.Closed += (_, _) =>
+        {
+            stage5C = stage5C with
+            {
+                AssistantEndpoint = window.Endpoint,
+                AssistantModel = window.Model,
+            };
+
+            assistantWindow = null;
+            SaveSettings();
+        };
+
+        assistantWindow = window;
+        window.Show();
+    }
+
+    // --- Tahap 5b ---
+
+    private void UpdateTypingSuppression()
+    {
+        if (notificationMonitor is null || model is null) return;
+
+        var typing = model.TypingDeferral && idleWatcher is not null && TypingRules.ShouldHold(idleWatcher.Idle);
+        notificationMonitor.SetSuppressed(typing || (scenarioMonitor?.Plan.SuppressNotifications ?? false));
+    }
+
+    private void UpdateQuietHours()
+    {
+        if (controller is null || model is null) return;
+
+        var quiet = QuietHoursRules.IsQuiet(
+            DateTimeOffset.Now,
+            model.QuietHoursEnabled,
+            model.QuietStartHour,
+            model.QuietEndHour);
+
+        if (controller.SetQuietHours(quiet))
+        {
+            Log.Write(quiet ? "jam tenang: aktif" : "jam tenang: selesai");
+        }
+    }
+
+    private void AnnounceReminders()
+    {
+        if (noteStore is null || controller is null || model is null) return;
+
+        var now = DateTimeOffset.Now;
+
+        foreach (var note in noteStore.Due(now).Where(note => note.RemindAt is { } at && at >= now.AddHours(-1)))
+        {
+            if (!announcedReminders.Add(note.Id)) continue;
+
+            controller.Refresh(new Activity(
+                id: "note-reminder-" + note.Id,
+                kind: ActivityKind.Notification,
+                priority: 95,
+                title: model.Text.Get("notes.reminderTitle"),
+                subtitle: note.Text,
+                isLive: false,
+                expiresAt: now.AddSeconds(10)));
+
+            speech?.Speak(note.Text);
+        }
+    }
+
+    private void StartFocusMusic()
+    {
+        if (model is null) return;
+        if (!FocusMusicRules.ShouldStart(true, model.FocusMusic)) return;
+
+        Log.Write("fokus: memutar playlist pilihan pengguna");
+        StartPath(model.FocusMusic);
+    }
+
+    private void OpenNotes()
+    {
+        if (noteStore is null) return;
+
+        noteStore.Save();
+        StartPath(noteStore.FilePath);
+    }
+
+    private void OpenVoiceNote()
+    {
+        if (model is null) return;
+
+        if (!model.VoiceNotes)
+        {
+            Log.Write("suara: modul dimatikan di pengaturan");
+            return;
+        }
+
+        if (voiceWindow is { IsVisible: true })
+        {
+            voiceWindow.Activate();
+            return;
+        }
+
+        var window = new VoiceNoteWindow(model.Text);
+
+        window.Accepted += result =>
+        {
+            if (noteStore is null || result.Text.Length == 0) return;
+
+            noteStore.Add(result.Text, NoteKind.Note, DateTimeOffset.Now, result.RemindAt);
+            noteStore.Save();
+            Log.Write("suara: catatan disimpan");
+            Notify("notes.title", "notes.added");
+        };
+
+        window.Closed += (_, _) => voiceWindow = null;
+        voiceWindow = window;
+        window.Show();
     }
 
     private void ClearClipboard()
@@ -633,7 +1017,32 @@ public partial class App : Application, IDisposable
             model.PaletteEnabled,
             model.OsdEnabled,
             model.MirrorEnabled,
-            contextSettings with { Enabled = model.ContextEnabled });
+            contextSettings with { Enabled = model.ContextEnabled },
+            stage5B with
+            {
+                NotesEnabled = model.NotesEnabled,
+                TypingDeferral = model.TypingDeferral,
+                QuietHoursEnabled = model.QuietHoursEnabled,
+                VoiceNotes = model.VoiceNotes,
+                SpeakNotifications = model.SpeakNotifications,
+                HighContrast = model.HighContrast,
+                LargeText = model.LargeText,
+                AlbumColor = model.AlbumColor,
+                Visualizer = model.Visualizer,
+                QuietStartHour = model.QuietStartHour,
+                QuietEndHour = model.QuietEndHour,
+                FocusMusic = model.FocusMusic,
+            },
+            Stage5C: stage5C with
+            {
+                AgentStatusEnabled = model.AgentStatusEnabled,
+                TerminalEnabled = model.TerminalEnabled,
+                ScreenshotEnabled = model.ScreenshotEnabled,
+                TickerEnabled = model.TickerEnabled,
+                TickerUrl = model.TickerUrl,
+                AssistantEnabled = model.AssistantEnabled,
+                PluginsEnabled = model.PluginsEnabled,
+            });
 
         if (!SettingsStore.Save(settings)) Log.Write("pengaturan: gagal disimpan");
 
@@ -669,9 +1078,18 @@ public partial class App : Application, IDisposable
         scenarioMonitor?.Dispose();
         clipboardMonitor?.Dispose();
         osdMonitor?.Dispose();
+        typingTimer?.Stop();
+        quietTimer?.Stop();
+        reminderTimer?.Stop();
+        agentMonitor?.Dispose();
+        tickerMonitor?.Dispose();
+        pluginHost?.Dispose();
+        assistantWindow?.Close();
+        speech?.Dispose();
         idleWatcher?.Dispose();
         paletteWindow?.Close();
         cameraWindow?.Close();
+        voiceWindow?.Close();
         pipe?.Dispose();
 
         GC.SuppressFinalize(this);

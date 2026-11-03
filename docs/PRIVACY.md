@@ -1,8 +1,9 @@
 # Privasi dan Izin
 
 Semua proses berjalan lokal. Tidak ada analitik, telemetri, iklan, atau unggahan
-data. Fitur yang butuh internet (belum ada di 0.2.0-beta) harus mati secara
-bawaan dan meminta izin saat dinyalakan.
+otomatis. Fitur yang butuh internet (ticker RSS dan asisten AI) mati secara
+bawaan, hanya menghubungi URL yang diisi pengguna, dan meminta izin saat
+dinyalakan.
 
 ## Data yang dibaca
 
@@ -17,6 +18,11 @@ bawaan dan meminta izin saat dinyalakan.
 | Berkas `.lrc` dari folder lirik | sekali per lagu | tidak | tidak sediakan berkas |
 | Window depan (nama proses, kotak, layar penuh) | sekali per detik | tidak | saklar penempatan otomatis |
 | Berkas yang ditarik ke shelf | sampai app ditutup | hanya path di memori | jangan tarik berkas |
+| `agent-status.json` (status agen) | tiap 2 detik bila modul menyala | tidak | saklar Status agen AI |
+| `commands.json` (perintah terminal) | saat app mulai | tidak | saklar Terminal |
+| Feed RSS/Atom | tiap 15 menit bila ticker menyala | hanya judul di memori | saklar Ticker |
+| Pertanyaan asisten + kunci API | hanya saat tombol Kirim | kunci hanya di memori | tutup jendela / jangan kirim |
+| Layar saat tangkapan layar | hanya saat perintah dipilih | PNG di Pictures | saklar Tangkapan layar |
 
 ## Data yang ditulis
 
@@ -26,9 +32,14 @@ bawaan dan meminta izin saat dinyalakan.
 | `dynamic-island.log` | waktu, nama fitur, aksi, dan pesan galat; **bukan** isi notifikasi | `%TEMP%` |
 | `.ics` uji | hanya bila skrip uji dijalankan | `%TEMP%` |
 | Nilai `DynamicIsland` | path exe, hanya saat autostart dicentang | `HKCU\...\Run` |
+| `agent-response.json` | id permintaan + setuju/tolak | folder status agen |
+| `commands.json` | nama, program, argumen perintah pilihan pengguna | `%APPDATA%\DynamicIsland` |
+| `plugins\*\plugin.json` | manifest dan izin plugin pilihan pengguna | `%APPDATA%\DynamicIsland` |
+| `capture-*.png` | tangkapan layar yang diminta pengguna | `Pictures\DynamicIsland` |
 
 Tidak ada isi notifikasi, teks yang diketik, audio mikrofon, gambar kamera, atau
-isi clipboard yang ditulis ke disk oleh versi ini.
+isi clipboard yang ditulis ke disk oleh versi ini. Kunci API asisten tidak
+ditulis ke disk.
 
 ## Izin
 
@@ -39,21 +50,27 @@ isi clipboard yang ditulis ke disk oleh versi ini.
 | Mulai otomatis | tulis `HKCU\...\Run` | saat centang di Pengaturan | centang kembali mati + alasan |
 | Penempatan adaptif | `GetForegroundWindow`/`GetWindowRect` | otomatis saat app jalan | tidak aktif bila gagal |
 | Named pipe event | named pipe lokal | saat app mulai | app tetap jalan tanpa event eksternal |
+| Ticker RSS | HTTPS GET ke URL pilihan | saat ticker dinyalakan | kapsul menampilkan kegagalan |
+| Asisten AI | HTTPS ke endpoint pilihan + kunci Bearer | hanya saat Kirim | pesan galat di jendela |
+| Tangkapan layar | GDI+ layar | saat perintah dipilih | alasan tampil di kapsul |
+| Plugin lokal | muat assembly di folder pengguna | saat saklar dinyalakan | plugin dilewati, log mencatat |
 
-Tidak ada: hak admin, akses jaringan, aksesibilitas, rekaman layar, hook
-keyboard/mouse, atau instalasi driver.
+Tidak ada: hak admin, aksesibilitas, rekaman layar, hook keyboard/mouse, atau
+instalasi driver. Jaringan hanya untuk ticker dan asisten, keduanya mati bawaan.
 
 ## Yang tidak dilakukan
 
 - Tidak merekam atau menyimpan isi ketikan.
 - Tidak membaca memori proses lain, menyuntik kode, atau meng-hook DirectX.
 - Tidak mengunggah berkas, notifikasi, atau statistik penggunaan.
-- Tidak menyimpan gambar kamera (fitur kamera belum ada).
+- Tidak menyimpan gambar kamera; tangkapan layar hanya saat diminta dan tetap lokal.
+- Tidak mengirim pertanyaan asisten atau feed ticker tanpa saklar/aksi pengguna.
 - Tidak menyalin berkas yang ditarik ke shelf; hanya path-nya di memori.
 
 ## Menghapus data
 
-- Pengaturan: hapus `%APPDATA%\DynamicIsland` atau jalankan
+- Pengaturan dan data modul: hapus `%APPDATA%\DynamicIsland` atau jalankan
   `Scripts\uninstall.ps1 -PurgeSettings`.
+- Tangkapan layar: hapus folder `Pictures\DynamicIsland`.
 - Log: hapus `%TEMP%\dynamic-island.log`.
 - Autostart: matikan centang di Pengaturan atau jalankan `uninstall.ps1`.

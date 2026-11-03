@@ -49,8 +49,28 @@ public sealed class NotificationMonitor : IDisposable
         }
     }
 
-    /// <summary>Menahan notifikasi non-kritis selama mode belajar.</summary>
-    public bool Suppress { get; set; }
+    /// <summary>Menahan notifikasi non-kritis selama mode belajar atau saat mengetik.</summary>
+    public bool Suppress { get; private set; }
+
+    /// <summary>Dipanggil saat notifikasi baru layak dibacakan (aksesibilitas).</summary>
+    public event Action<string>? Arrived;
+
+    /// <summary>
+    /// Menahan atau melepas notifikasi. Saat dilepas, notifikasi terbaru
+    /// diterbitkan lagi pada putaran polling berikutnya (tidak hilang).
+    /// </summary>
+    public void SetSuppressed(bool value)
+    {
+        if (Suppress == value) return;
+
+        Suppress = value;
+
+        if (!value)
+        {
+            shownId = null;
+            Log.Write("notifikasi: tahanan dilepas");
+        }
+    }
 
     private bool privacyHidden;
 
@@ -203,6 +223,9 @@ public sealed class NotificationMonitor : IDisposable
             shownId = latest.Id;
             // Hanya pengirim yang dicatat: isi notifikasi tetap di memori.
             Log.Write(string.IsNullOrEmpty(app) ? "notifikasi: pesan baru" : $"notifikasi: pesan dari {app}");
+
+            if (!privacyHidden) Arrived?.Invoke(title);
+
             Publish(new Activity(
                 id: ActivityId,
                 kind: ActivityKind.Notification,

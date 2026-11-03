@@ -13,9 +13,25 @@ internal static class Theme
 {
     public const string AccentBrushKey = "AccentBrush";
 
-    public static void Apply(AccentChoice accent)
+    /// <summary>Kontras tinggi memakai aksen putih murni; mematikan mengembalikan pilihan pengguna.</summary>
+    public static void ApplyHighContrast(bool enabled, AccentChoice accent)
     {
-        var rgb = accent.Rgb();
+        if (!enabled)
+        {
+            Apply(accent);
+            return;
+        }
+
+        var brush = new SolidColorBrush(Colors.White);
+        brush.Freeze();
+        Application.Current.Resources[AccentBrushKey] = brush;
+    }
+
+    public static void Apply(AccentChoice accent) => ApplyRgb(accent.Rgb());
+
+    /// <summary>Memakai warna dari sampul album, tetap aman untuk kontras gelap.</summary>
+    public static void ApplyRgb(uint rgb)
+    {
         var brush = new SolidColorBrush(Color.FromRgb(
             (byte)(rgb >> 16),
             (byte)(rgb >> 8),

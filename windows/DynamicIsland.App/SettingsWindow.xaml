@@ -111,6 +111,82 @@
             <CheckBox x:Name="MirrorCheck" Content="{Binding LabelMirror}" Margin="0,14,0,0" Checked="Mirror_Changed" Unchecked="Mirror_Changed" />
             <TextBlock Text="{Binding LabelMirrorNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
 
+            <TextBlock Text="{Binding LabelStage5B}" Style="{StaticResource Section}" />
+
+            <CheckBox x:Name="NotesCheck" Content="{Binding LabelNotes}" Checked="Notes_Changed" Unchecked="Notes_Changed" />
+
+            <CheckBox x:Name="TypingCheck" Content="{Binding LabelTyping}" Margin="0,14,0,0" Checked="Typing_Changed" Unchecked="Typing_Changed" />
+            <TextBlock Text="{Binding LabelTypingNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="QuietCheck" Content="{Binding LabelQuiet}" Margin="0,14,0,0" Checked="Quiet_Changed" Unchecked="Quiet_Changed" />
+            <TextBlock Text="{Binding LabelQuietNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <TextBlock Text="{Binding LabelQuietHoursRange}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <ComboBox x:Name="QuietStartBox" Width="78" Padding="6,3" SelectionChanged="QuietStart_Changed" />
+                <TextBlock Text="–" VerticalAlignment="Center" Margin="8,0" />
+                <ComboBox x:Name="QuietEndBox" Width="78" Padding="6,3" SelectionChanged="QuietEnd_Changed" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding LabelFocusMusic}" Margin="0,16,0,0" />
+            <Grid Margin="0,6,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="FocusMusicBox"
+                         Padding="8,5"
+                         Background="#1FFFFFFF"
+                         Foreground="#FFFFFF"
+                         BorderThickness="0"
+                         CaretBrush="#FFFFFF"
+                         TextChanged="FocusMusic_Changed" />
+                <Button Grid.Column="1" Content="{Binding LabelBrowse}" Click="FocusMusicBrowse_Click"
+                        Margin="8,0,0,0" Padding="10,4" Background="#1FFFFFFF" Foreground="#FFFFFF"
+                        BorderThickness="0" Cursor="Hand" />
+            </Grid>
+            <TextBlock Text="{Binding LabelFocusMusicNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="AlbumColorCheck" Content="{Binding LabelAlbumColor}" Margin="0,14,0,0"
+                      Checked="AlbumColor_Changed" Unchecked="AlbumColor_Changed" />
+            <TextBlock Text="{Binding LabelAlbumColorNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="VisualizerCheck" Content="{Binding LabelVisualizer}" Margin="0,10,0,0"
+                      Checked="Visualizer_Changed" Unchecked="Visualizer_Changed" />
+
+            <CheckBox x:Name="VoiceCheck" Content="{Binding LabelVoice}" Margin="0,14,0,0" Checked="Voice_Changed" Unchecked="Voice_Changed" />
+            <TextBlock Text="{Binding LabelVoiceNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="SpeakCheck" Content="{Binding LabelSpeak}" Margin="0,14,0,0" Checked="Speak_Changed" Unchecked="Speak_Changed" />
+            <TextBlock Text="{Binding LabelSpeakNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="LargeTextCheck" Content="{Binding LabelLargeText}" Margin="0,14,0,0" Checked="LargeText_Changed" Unchecked="LargeText_Changed" />
+            <CheckBox x:Name="ContrastCheck" Content="{Binding LabelContrast}" Margin="0,10,0,0" Checked="Contrast_Changed" Unchecked="Contrast_Changed" />
+            <TextBlock Text="{Binding LabelAccessibilityNote}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+
+            <TextBlock Text="{Binding LabelStage5C}" Style="{StaticResource Section}" />
+
+            <CheckBox x:Name="AgentStatusCheck" Content="{Binding LabelAgentStatus}" Checked="AgentStatus_Changed" Unchecked="AgentStatus_Changed" />
+            <TextBlock Text="{Binding LabelAgentStatusNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="TerminalCheck" Content="{Binding LabelTerminal}" Margin="0,14,0,0" Checked="Terminal_Changed" Unchecked="Terminal_Changed" />
+            <TextBlock Text="{Binding LabelTerminalNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="ScreenshotCheck" Content="{Binding LabelScreenshot}" Margin="0,14,0,0" Checked="Screenshot_Changed" Unchecked="Screenshot_Changed" />
+            <TextBlock Text="{Binding LabelScreenshotNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="TickerCheck" Content="{Binding LabelTicker}" Margin="0,14,0,0" Checked="Ticker_Changed" Unchecked="Ticker_Changed" />
+            <TextBlock Text="{Binding LabelTickerNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+            <TextBlock Text="{Binding LabelTickerUrl}" Margin="0,8,0,0" />
+            <TextBox x:Name="TickerUrlBox" Margin="0,4,0,0" Padding="8,5"
+                     Background="#1FFFFFFF" Foreground="#FFFFFF" BorderThickness="0"
+                     CaretBrush="#FFFFFF" TextChanged="TickerUrl_Changed" />
+
+            <CheckBox x:Name="AssistantCheck" Content="{Binding LabelAssistant}" Margin="0,14,0,0" Checked="Assistant_Changed" Unchecked="Assistant_Changed" />
+            <TextBlock Text="{Binding LabelAssistantNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="PluginsCheck" Content="{Binding LabelPlugins}" Margin="0,14,0,0" Checked="Plugins_Changed" Unchecked="Plugins_Changed" />
+            <TextBlock Text="{Binding LabelPluginsNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
             <TextBlock Text="{Binding LabelPermissions}" Style="{StaticResource Muted}" Margin="0,18,0,0" />
 
             <Button x:Name="PrimaryButton"

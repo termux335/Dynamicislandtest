@@ -1,0 +1,81 @@
+<Window x:Class="DynamicIsland.App.AssistantWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Asisten AI"
+        Width="540" Height="500"
+        WindowStartupLocation="CenterScreen"
+        Background="#0B0B0B"
+        Foreground="#FFFFFF"
+        ShowInTaskbar="True"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#1FFFFFFF" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="CaretBrush" Value="#FFFFFF" />
+        </Style>
+        <Style TargetType="PasswordBox">
+            <Setter Property="Background" Value="#1FFFFFFF" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="CaretBrush" Value="#FFFFFF" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
+                   FontSize="18" FontWeight="SemiBold" />
+
+        <TextBlock Grid.Row="1" x:Name="PrivacyText" TextWrapping="Wrap" Foreground="#FFB0B0B0"
+                   Margin="0,8,0,0" />
+
+        <StackPanel Grid.Row="2" Margin="0,14,0,0">
+            <TextBlock x:Name="EndpointLabel" />
+            <TextBox x:Name="EndpointBox" Margin="0,4,0,0" />
+            <TextBlock x:Name="ModelLabel" Margin="0,10,0,0" />
+            <TextBox x:Name="ModelBox" Margin="0,4,0,0" />
+            <TextBlock x:Name="KeyLabel" Margin="0,10,0,0" />
+            <PasswordBox x:Name="KeyBox" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Margin="0,14,0,0">
+            <TextBlock x:Name="QuestionLabel" />
+            <TextBox x:Name="QuestionBox" Height="64" Margin="0,4,0,0"
+                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+        </StackPanel>
+
+        <Border Grid.Row="4" Margin="0,12,0,0" Background="#14FFFFFF" CornerRadius="10" Padding="12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="AnswerText" TextWrapping="Wrap" Foreground="#FFE8E8E8" />
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="5" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Foreground="#FFB0B0B0" TextWrapping="Wrap" />
+            <Button Grid.Column="1" x:Name="SendButton" Click="Send_Click" Padding="18,8"
+                    Background="#FF9F43" Foreground="#000000" BorderThickness="0"
+                    FontWeight="SemiBold" Cursor="Hand" />
+        </Grid>
+    </Grid>
+</Window>

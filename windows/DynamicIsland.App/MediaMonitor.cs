@@ -1,7 +1,9 @@
+using System.Security.Cryptography;
 using System.Windows.Threading;
 using DynamicIsland.Core;
 using Windows.Foundation;
 using Windows.Media.Control;
+using Windows.Storage.Streams;
 
 namespace DynamicIsland.App;
 
@@ -32,6 +34,11 @@ public sealed class MediaMonitor : IDisposable
     private string? lyricsKey;
 
     private IReadOnlyList<LyricLine> lyrics = Array.Empty<LyricLine>();
+
+    private string? artworkKey;
+
+    /// <summary>Byte sampul album (PNG/JPEG) saat lagu berganti; array kosong saat tidak ada.</summary>
+    public event Action<byte[]>? ArtworkChanged;
 
     public MediaMonitor(IslandController controller, Dispatcher dispatcher, IslandText? text = null)
     {
@@ -124,6 +131,9 @@ public sealed class MediaMonitor : IDisposable
             }
 
             var properties = await session.TryGetMediaPropertiesAsync();
+
+            await PublishArtworkAsync(properties);
+
             var playback = session.GetPlaybackInfo();
             var timeline = session.GetTimelineProperties();
 
@@ -176,6 +186,41 @@ public sealed class MediaMonitor : IDisposable
         {
             Log.Write("media: baca sesi gagal (" + error.Message + ")");
         }
+    }
+
+    /// <summary>
+    /// Membaca sampul sekali per lagu dan meneruskannya ke UI. Warna dipilih di
+    /// Core; monitor ini hanya memindahkan byte.
+    /// </summary>
+    private async Task PublishArtworkAsync(GlobalSystemMediaTransportControlsSessionMediaProperties? properties)
+    {
+        byte[]? bytes = null;
+
+        if (properties?.Thumbnail is { } reference)
+        {
+            try
+            {
+                using var stream = await reference.OpenReadAsync();
+                if (stream.Size > 0)
+                {
+                    using var reader = new DataReader(stream.GetInputStreamAt(0));
+                    await reader.LoadAsync((uint)stream.Size);
+
+                    bytes = new byte[stream.Size];
+                    reader.ReadBytes(bytes);
+                }
+            }
+            catch (Exception error) when (error is InvalidOperationException or System.Runtime.InteropServices.COMException or UnauthorizedAccessException)
+            {
+                Log.Write("media: sampul tidak terbaca (" + error.Message + ")");
+            }
+        }
+
+        var key = bytes is null ? null : Convert.ToHexString(SHA256.HashData(bytes));
+        if (string.Equals(key, artworkKey, StringComparison.Ordinal)) return;
+
+        artworkKey = key;
+        ArtworkChanged?.Invoke(bytes ?? Array.Empty<byte>());
     }
 
     private void Publish(Activity? activity)

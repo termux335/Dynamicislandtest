@@ -1,10 +1,10 @@
-# Dynamic Island — Windows (beta, 0.4.0-beta)
+# Dynamic Island — Windows (beta, 0.6.0-beta)
 
 Kapsul mengambang di tengah atas layar, 30–480 px tergantung state. Windows tidak
 punya notch, jadi kapsul selalu melayang 8 px dari tepi atas.
 
-> **Status: beta publik (0.4.0-beta).** Fitur Tahap 1–4 dan Tahap 5a sudah
-> dipakai harian; Tahap 5b–5c belum dikerjakan. Build belum ditandatangani, jadi Windows SmartScreen
+> **Status: beta publik (0.6.0-beta).** Fitur Tahap 1–4, 5a, 5b, dan 5c sudah
+> masuk; rekaman layar belum termasuk. Build belum ditandatangani, jadi Windows SmartScreen
 > bisa menampilkan peringatan saat pertama dijalankan. Angka versi ada di
 > `Directory.Build.props` (satu sumber untuk semua proyek), tampil di kaki jendela
 > Pengaturan, dan dicatat di log saat app mulai. Format berkas pengaturan masih
@@ -198,6 +198,90 @@ asli tidak pernah masuk riwayat.
 - Kecerahan hanya tersedia pada monitor yang mendukung DDC/CI.
 - Riwayat clipboard tidak disimpan antar sesi.
 
+## Tahap 5b: produktivitas dan aksesibilitas
+
+| Modul | Saklar | Perilaku |
+|---|---|---|
+| Catatan & snippet | Pengaturan | Tersimpan lokal di `notes.json`. Tambah lewat palette dengan `catat …`, cari, lalu Enter untuk menyalin. Maksimal 100 catatan |
+| Catatan suara | Pengaturan + menu | Satu ucapan dengan pengenalan suara di perangkat; teks bisa diedit sebelum disimpan. “ingatkan 10 menit …” menjadi pengingat. Bila gagal, alasannya tampil dan catatan bisa diketik |
+| Tunda notifikasi saat mengetik | Pengaturan (bawaan aktif) | Hanya membaca waktu input terakhir (`GetLastInputInfo`). Tidak ada hook keyboard dan tidak ada isi ketikan yang dibaca/disimpan. Notifikasi dilepas setelah berhenti mengetik |
+| Jam tenang otomatis | Pengaturan (jam mulai/selesai) | Redup 65% dan hanya peringatan kritis. Bawaan 22:00–07:00 |
+| Musik fokus | Pengaturan (berkas/URL) | Playlist/URL pilihan pengguna diputar saat sesi fokus dimulai. App tidak membawa atau mengunduh musik |
+| Visualizer musik | Pengaturan (bawaan aktif) | Batang bergerak di kartu media saat lagu diputar; dekoratif, bukan analisis audio |
+| Warna sampul album | Pengaturan (mati bawaan) | Aksen mengikuti warna dominan sampul; kembali ke aksen pilihan bila tidak ada sampul |
+| Bacakan notifikasi | Pengaturan | Notifikasi dibacakan dengan suara Windows; hanya saat dinyalakan, dan tidak membacakan isi yang sedang disembunyikan |
+| Teks besar / kontras tinggi | Pengaturan | Teks 1,25x (jendela ikut membesar) dan aksen putih murni |
+
+### Uji manual
+
+```powershell
+$env:ISLAND_NOTES = "$env:TEMP\catatan-uji.json"   # berkas catatan terpisah untuk uji
+```
+
+- **Ctrl+Alt+V**, ketik `catat beli susu` lalu Enter → catatan tersimpan dan muncul lagi saat query berikutnya.
+- Menu klik kanan → **Catatan suara** → ucapkan `ingatkan 10 menit minum air` → pengingat muncul di kapsul setelah 10 menit (timer dicek tiap 30 detik).
+- Nyalakan **Tunda notifikasi saat mengetik**, lalu ketik terus di aplikasi lain; notifikasi muncul setelah berhenti ±1,5 detik.
+- Nyalakan **Jam tenang otomatis**: aktivitas non-kritis hilang dari kapsul, panggilan tetap tampil.
+
+### Izin dan data Tahap 5b
+
+- Mikrofon hanya dipakai saat jendela catatan suara terbuka; tidak ada rekaman yang disimpan.
+- Pengenalan suara memakai mesin di perangkat. Bila paket bahasa tidak ada atau izin ditolak, penyebabnya ditampilkan.
+- Tunda notifikasi hanya membaca selisih waktu input terakhir, bukan tombol atau teks.
+- Catatan, pengingat, dan pengaturan hanya di perangkat; tidak ada sinkronisasi.
+
+### Batasan Tahap 5b
+
+- Visualizer dekoratif mengikuti irama tetap, bukan FFT audio.
+- Jam tenang memakai granularitas satu jam, belum menit.
+- Pengenalan suara bergantung pada paket bahasa dan izin mikrofon Windows.
+
+## Tahap 5c: modul opsional
+
+Semua modul punya saklar di **Pengaturan**. Yang butuh internet atau data
+sensitif mati secara bawaan; tidak ada kegagalan yang didiamkan.
+
+| Modul | Saklar | Perilaku |
+|---|---|---|
+| Status agen AI | Pengaturan (mati bawaan) | Membaca `%APPDATA%\DynamicIsland\agent-status.json` tiap 2 detik: alat, state, token terpakai, dan permintaan izin. **Setujui/Tolak** menulis `agent-response.json` di folder yang sama. Tanpa kunci API dan tanpa internet |
+| Terminal cepat | Pengaturan + `commands.json` | Hanya perintah yang didaftarkan pengguna; dijalankan dari palette setelah konfirmasi. Tidak ada eksekusi dari sumber luar |
+| Tangkapan layar | Pengaturan (bawaan aktif) | Palette → **Tangkapan layar cepat** menyimpan PNG ke `Pictures\DynamicIsland`. Rekaman layar belum ada |
+| Ticker RSS | Pengaturan + URL (mati bawaan) | Judul dan tautan saja, diperbarui tiap 15 menit; kegagalan jaringan tampil di kapsul |
+| Asisten AI | Pengaturan (mati bawaan) | Jendela OpenAI-compatible; kunci API hanya di memori dan tidak disimpan. Tidak ada yang dikirim sebelum **Kirim** |
+| Plugin lokal | Pengaturan (mati bawaan) | Hanya `plugin.json` di `%APPDATA%\DynamicIsland\plugins` dengan izin `activity.show`/`ui.notify`. Plugin berjalan di proses ini; hanya pasang yang dipercaya |
+
+### Uji manual Tahap 5c
+
+```powershell
+# Status agen: tulis berkas, lalu nyalakan saklar Status agen AI
+$agent = "$env:APPDATA\DynamicIsland\agent-status.json"
+'{"tool":"Claude Code","state":"waiting","used":120000,"limit":200000,"request":{"id":"uji-1","summary":"Izinkan ubah berkas"}}' | Set-Content $agent
+
+# Terminal: daftarkan satu perintah, lalu cari namanya di Ctrl+Alt+V
+'[{"Name":"Build","FileName":"dotnet","Arguments":"build","Confirm":true}]' | Set-Content "$env:APPDATA\DynamicIsland\commands.json"
+```
+
+- **Ctrl+Alt+V** → `Build` → konfirmasi Ya → `dotnet build` berjalan tanpa shell.
+- **Ctrl+Alt+V** → `Tangkapan layar cepat` → PNG muncul di Pictures dan kapsul memberi umpan balik.
+- Nyalakan **Ticker RSS**, isi URL feed, tunggu ≤ 15 menit (atau mulai ulang app) → judul berputar tiap 8 detik.
+- Nyalakan **Asisten AI**, buka palette → **Asisten AI**, isi endpoint dan kunci, lalu kirim satu pertanyaan.
+
+### Izin dan data Tahap 5c
+
+- Status agen dan terminal hanya membaca berkas lokal yang Anda tulis sendiri; tidak ada jaringan.
+- Ticker mengirim satu GET HTTPS ke URL feed pilihan Anda tiap 15 menit. Mati bawaan.
+- Asisten mengirim pertanyaan dan kunci Bearer hanya ke endpoint yang Anda isi, hanya saat **Kirim**. Kunci tidak disimpan.
+- Tangkapan layar menulis PNG ke Pictures; tidak diunggah.
+- Plugin hanya dimuat dari folder pengguna dan hanya izin yang dikenal; plugin berjalan in-process, jadi tidak ada sandbox penuh.
+
+### Batasan Tahap 5c
+
+- Rekaman layar belum diimplementasikan; hanya tangkapan layar.
+- Status agen bergantung pada alat yang menulis `agent-status.json`; belum ada integrasi langsung ke Claude Code.
+- Ticker hanya RSS/Atom, bukan kurs atau harga khusus.
+- Plugin berjalan dengan kepercayaan penuh setelah manifest lolos; toko tema/komunitas tetap ditunda.
+
+
 ## Fitur
 
 | Fitur | Cara menyalakan | Yang tampil |
@@ -342,7 +426,9 @@ Semua pesan (termasuk aksi yang ditekan) dicatat di `%TEMP%\dynamic-island.log`.
 
 ## Izin yang dibutuhkan
 
-Tidak ada izin admin, jaringan, aksesibilitas, atau rekaman layar. Named pipe
+Tidak ada izin admin, aksesibilitas, atau rekaman layar. Jaringan hanya dipakai
+ticker dan asisten AI, keduanya mati bawaan dan hanya ke URL yang Anda isi.
+Named pipe
 hanya lokal di mesin yang sama. Tiga hal yang menyentuh sistem:
 
 - **Status mikrofon**: app hanya membaca registry privasi Windows

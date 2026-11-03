@@ -2,12 +2,12 @@
 
   <!--
     Satu sumber versi dan metadata untuk semua proyek Windows.
-    Versi mengikuti SemVer: 0.4.0-beta berarti fitur Tahap 1-5a sudah bisa
-    dipakai harian, Tahap 5b-5c belum selesai, dan format pengaturan masih boleh
-    berubah antar rilis beta.
+    Versi mengikuti SemVer: 0.6.0-beta berarti Tahap 1-5c sudah masuk, dengan
+    batasan yang dicatat di README, dan format pengaturan masih boleh berubah
+    antar rilis beta.
   -->
   <PropertyGroup>
-    <Version>0.4.0-beta</Version>
+    <Version>0.6.0-beta</Version>
     <!-- Turunan dari Version supaya -p:Version saat rilis juga tampil di UI. -->
     <InformationalVersion Condition="'$(InformationalVersion)' == ''">$(Version)</InformationalVersion>
     <Product>Dynamic Island</Product>

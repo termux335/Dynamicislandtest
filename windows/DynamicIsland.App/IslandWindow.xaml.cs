@@ -24,6 +24,8 @@ public partial class IslandWindow : Window
     private readonly MediaMonitor media;
     private readonly NotificationMonitor notifications;
     private readonly DispatcherTimer longPressTimer;
+    private readonly DispatcherTimer visualizerTimer;
+    private readonly FrameworkElement[] visualizerBars;
 
     private DispatcherTimer? resizeTimer;
     private DateTime resizeStarted;
@@ -41,6 +43,7 @@ public partial class IslandWindow : Window
     private double oledOpacity = 1;
     private int oledOffsetX;
     private int oledOffsetY;
+    private double accessibilityScale = 1;
 
     public IslandWindow(
         IslandViewModel model,
@@ -65,6 +68,18 @@ public partial class IslandWindow : Window
             (_, _) => OnLongPress(),
             Dispatcher);
         longPressTimer.Stop();
+
+        visualizerBars = new FrameworkElement[]
+        {
+            VisualizerBar1, VisualizerBar2, VisualizerBar3, VisualizerBar4, VisualizerBar5,
+        };
+
+        visualizerTimer = new DispatcherTimer(
+            TimeSpan.FromMilliseconds(70),
+            DispatcherPriority.Render,
+            (_, _) => AnimateVisualizer(),
+            Dispatcher);
+        visualizerTimer.Start();
 
         model.PropertyChanged += (_, _) => SyncBounds(animate: true);
         Loaded += (_, _) => SyncBounds(animate: false);
@@ -93,6 +108,14 @@ public partial class IslandWindow : Window
 
     public event Action? ShortcutsRequested;
 
+    public event Action? NotesRequested;
+
+    public event Action? VoiceRequested;
+
+    private void Notes_Click(object sender, RoutedEventArgs e) => NotesRequested?.Invoke();
+
+    private void Voice_Click(object sender, RoutedEventArgs e) => VoiceRequested?.Invoke();
+
     private void Palette_Click(object sender, RoutedEventArgs e) => PaletteRequested?.Invoke();
 
     private void Clipboard_Click(object sender, RoutedEventArgs e) => ClipboardRequested?.Invoke();
@@ -113,9 +136,31 @@ public partial class IslandWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        visualizerTimer.Stop();
         hotkeys?.Detach();
         hotkeys = null;
         base.OnClosed(e);
+    }
+
+    /// <summary>
+    /// Batang dekoratif yang bergerak saat lagu diputar. Ini bukan analisis
+    /// audio; hanya indikator visual supaya kartu media terasa hidup.
+    /// </summary>
+    private void AnimateVisualizer()
+    {
+        var active = model.Visualizer && model.IsMedia && model.MediaPlaying && model.ShowsMediaCard;
+        var visibility = active ? Visibility.Visible : Visibility.Collapsed;
+
+        if (VisualizerPanel.Visibility != visibility) VisualizerPanel.Visibility = visibility;
+        if (!active) return;
+
+        var seconds = DateTime.UtcNow.Ticks / (double)TimeSpan.TicksPerSecond;
+
+        for (var index = 0; index < visualizerBars.Length; index++)
+        {
+            var level = 3 + (15 * Math.Abs(Math.Sin((seconds * 2.6) + (index * 0.9))));
+            visualizerBars[index].Height = level;
+        }
     }
 
     /// <summary>
@@ -156,8 +201,20 @@ public partial class IslandWindow : Window
         SetClickThrough(model.ContextClickThrough);
 
         var size = model.Size;
-        var width = model.WindowWidth;
-        var (left, top) = TargetFor(width, size.Height);
+        var scale = model.AccessibilityScale;
+
+        if (Math.Abs(accessibilityScale - scale) > 0.001)
+        {
+            accessibilityScale = scale;
+            RootGrid.LayoutTransform = new ScaleTransform(scale, scale);
+        }
+
+        RootGrid.Width = model.WindowWidth;
+        RootGrid.Height = size.Height;
+
+        var width = model.WindowWidth * scale;
+        var height = size.Height * scale;
+        var (left, top) = TargetFor(width, height);
 
         // Perubahan isi (mis. progres media) tidak perlu menggeser window.
         if (IsVisible

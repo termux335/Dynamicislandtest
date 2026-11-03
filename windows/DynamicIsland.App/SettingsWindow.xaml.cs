@@ -58,6 +58,25 @@ public partial class SettingsWindow : Window
         PaletteCheck.IsChecked = model.PaletteEnabled;
         OsdCheck.IsChecked = model.OsdEnabled;
         MirrorCheck.IsChecked = model.MirrorEnabled;
+        NotesCheck.IsChecked = model.NotesEnabled;
+        TypingCheck.IsChecked = model.TypingDeferral;
+        QuietCheck.IsChecked = model.QuietHoursEnabled;
+        FillHours(QuietStartBox, model.QuietStartHour);
+        FillHours(QuietEndBox, model.QuietEndHour);
+        FocusMusicBox.Text = model.FocusMusic;
+        AlbumColorCheck.IsChecked = model.AlbumColor;
+        VisualizerCheck.IsChecked = model.Visualizer;
+        VoiceCheck.IsChecked = model.VoiceNotes;
+        SpeakCheck.IsChecked = model.SpeakNotifications;
+        LargeTextCheck.IsChecked = model.LargeText;
+        ContrastCheck.IsChecked = model.HighContrast;
+        AgentStatusCheck.IsChecked = model.AgentStatusEnabled;
+        TerminalCheck.IsChecked = model.TerminalEnabled;
+        ScreenshotCheck.IsChecked = model.ScreenshotEnabled;
+        TickerCheck.IsChecked = model.TickerEnabled;
+        TickerUrlBox.Text = model.TickerUrl;
+        AssistantCheck.IsChecked = model.AssistantEnabled;
+        PluginsCheck.IsChecked = model.PluginsEnabled;
 
         ready = true;
     }
@@ -234,6 +253,193 @@ public partial class SettingsWindow : Window
         }
 
         model.MirrorEnabled = wanted;
+    }
+
+    private void Notes_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.NotesEnabled = NotesCheck.IsChecked == true;
+    }
+
+    private void Typing_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.TypingDeferral = TypingCheck.IsChecked == true;
+    }
+
+    private void Quiet_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.QuietHoursEnabled = QuietCheck.IsChecked == true;
+    }
+
+    private void QuietStart_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (ready && QuietStartBox.SelectedIndex >= 0) model.QuietStartHour = QuietStartBox.SelectedIndex;
+    }
+
+    private void QuietEnd_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (ready && QuietEndBox.SelectedIndex >= 0) model.QuietEndHour = QuietEndBox.SelectedIndex;
+    }
+
+    private void FocusMusic_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (ready) model.FocusMusic = FocusMusicBox.Text;
+    }
+
+    private void FocusMusicBrowse_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = model.LabelFocusMusic,
+            Filter = "Audio/playlist|*.m3u;*.m3u8;*.mp3;*.wav;*.flac;*.aac;*.ogg;*.wma|Semua berkas|*.*",
+            CheckFileExists = true,
+        };
+
+        if (dialog.ShowDialog(this) != true) return;
+
+        // TextChanged yang menyalin ke model; handler tetap jalan karena ready.
+        FocusMusicBox.Text = dialog.FileName;
+    }
+
+    private void AlbumColor_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.AlbumColor = AlbumColorCheck.IsChecked == true;
+    }
+
+    private void Visualizer_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.Visualizer = VisualizerCheck.IsChecked == true;
+    }
+
+    private static void FillHours(ComboBox box, int selected)
+    {
+        for (var hour = 0; hour < 24; hour++) box.Items.Add($"{hour:00}:00");
+
+        box.SelectedIndex = Math.Clamp(selected, 0, 23);
+    }
+
+    private void Voice_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.VoiceNotes = VoiceCheck.IsChecked == true;
+    }
+
+    private void Speak_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.SpeakNotifications = SpeakCheck.IsChecked == true;
+    }
+
+    private void LargeText_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.LargeText = LargeTextCheck.IsChecked == true;
+    }
+
+    private void Contrast_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.HighContrast = ContrastCheck.IsChecked == true;
+    }
+
+    private void AgentStatus_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.AgentStatusEnabled = AgentStatusCheck.IsChecked == true;
+    }
+
+    private void Terminal_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!ready) return;
+
+        if (TerminalCheck.IsChecked == true)
+        {
+            var answer = MessageBox.Show(this, model.LabelTerminalNote, model.LabelTerminal,
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                ready = false;
+                TerminalCheck.IsChecked = false;
+                ready = true;
+                model.TerminalEnabled = false;
+                return;
+            }
+        }
+
+        model.TerminalEnabled = TerminalCheck.IsChecked == true;
+    }
+
+    private void Screenshot_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.ScreenshotEnabled = ScreenshotCheck.IsChecked == true;
+    }
+
+    /// <summary>Ticker memakai internet: izin diminta saat dinyalakan.</summary>
+    private void Ticker_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!ready) return;
+
+        if (TickerCheck.IsChecked == true)
+        {
+            var answer = MessageBox.Show(this, model.LabelTickerNote, model.LabelTicker,
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                ready = false;
+                TickerCheck.IsChecked = false;
+                ready = true;
+                model.TickerEnabled = false;
+                return;
+            }
+        }
+
+        model.TickerEnabled = TickerCheck.IsChecked == true;
+    }
+
+    private void TickerUrl_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (ready) model.TickerUrl = TickerUrlBox.Text;
+    }
+
+    /// <summary>Asisten mengirim data ke endpoint pilihan pengguna saat Kirim ditekan.</summary>
+    private void Assistant_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!ready) return;
+
+        if (AssistantCheck.IsChecked == true)
+        {
+            var answer = MessageBox.Show(this, model.LabelAssistantNote, model.LabelAssistant,
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                ready = false;
+                AssistantCheck.IsChecked = false;
+                ready = true;
+                model.AssistantEnabled = false;
+                return;
+            }
+        }
+
+        model.AssistantEnabled = AssistantCheck.IsChecked == true;
+    }
+
+    private void Plugins_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!ready) return;
+
+        if (PluginsCheck.IsChecked == true)
+        {
+            var answer = MessageBox.Show(this, model.LabelPluginsNote, model.LabelPlugins,
+                MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                ready = false;
+                PluginsCheck.IsChecked = false;
+                ready = true;
+                model.PluginsEnabled = false;
+                return;
+            }
+        }
+
+        model.PluginsEnabled = PluginsCheck.IsChecked == true;
     }
 
     private void Primary_Click(object sender, RoutedEventArgs e)
