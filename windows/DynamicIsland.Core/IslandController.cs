@@ -4,7 +4,12 @@ namespace DynamicIsland.Core;
 public sealed record IslandPresentation(
     Activity? Primary = null,
     Activity? Secondary = null,
-    DisplayMode Mode = DisplayMode.Standar);
+    DisplayMode Mode = DisplayMode.Standar,
+    IslandContext Context = IslandContext.Normal,
+    ResponseLevel ResponseLevel = ResponseLevel.Normal,
+    bool Visible = true,
+    bool ClickThrough = false,
+    double Opacity = 1);
 
 /// <summary>
 /// Inti logika Dynamic Island. Bebas dari UI supaya bisa dites tanpa WPF.
@@ -28,6 +33,27 @@ public sealed class IslandController
     public TimeSpan AutoCollapseDelay { get; }
 
     public IslandPresentation Presentation { get; private set; } = new();
+
+    private ContextResolution contextResolution = ContextResolution.NormalContext;
+
+    /// <summary>Konteks Mode Tidak Mengganggu yang sedang berlaku.</summary>
+    public ContextResolution ContextResolution => contextResolution;
+
+    /// <summary>
+    /// Menerapkan hasil deteksi konteks. Controller yang memaksa state minimal
+    /// dan menyaring aktivitas non-kritis, supaya aturan tetap sama di UI mana pun.
+    /// </summary>
+    public bool SetContext(ContextResolution resolution)
+    {
+        if (contextResolution == resolution) return false;
+
+        contextResolution = resolution;
+        Publish();
+        return true;
+    }
+
+    /// <summary>Kembali ke tampilan normal (fitur dimatikan atau keluar dari konteks).</summary>
+    public void ClearContext() => SetContext(ContextResolution.NormalContext);
 
     private DisplayMode displayMode = DisplayMode.Standar;
 
@@ -267,10 +293,36 @@ public sealed class IslandController
     {
         SyncExpandedClock();
 
+        var effect = contextResolution.Effect;
+        var primary = Queue.Primary;
+        var secondary = ShowsSecondary ? Queue.Secondary : null;
+
+        if (effect.CriticalOnly)
+        {
+            primary = primary is { } candidate && ContextRules.IsCritical(candidate) ? candidate : null;
+            secondary = null;
+        }
+
+        if (primary is not null && effect.ForcedState is { } forced && primary.State != forced)
+        {
+            primary = primary with { State = forced };
+        }
+
+        if (!effect.Visible)
+        {
+            primary = null;
+            secondary = null;
+        }
+
         var next = new IslandPresentation(
-            Primary: Queue.Primary,
-            Secondary: ShowsSecondary ? Queue.Secondary : null,
-            Mode: displayMode);
+            Primary: primary,
+            Secondary: secondary,
+            Mode: displayMode,
+            Context: contextResolution.Context,
+            ResponseLevel: contextResolution.Level,
+            Visible: effect.Visible,
+            ClickThrough: effect.ClickThrough,
+            Opacity: effect.Opacity);
 
         if (next == Presentation) return;
 

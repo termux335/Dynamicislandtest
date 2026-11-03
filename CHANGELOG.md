@@ -4,7 +4,43 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan
 [Semantic Versioning](https://semver.org/lang/id/). Semua perubahan yang terlihat
 pengguna dicatat di sini; detail teknis ada di riwayat git.
 
-## [Unreleased]
+## [0.3.0-beta] - 2026-11-03
+
+Tahap 4: mode tidak mengganggu dan modul pembeda.
+
+### Added
+
+- Deteksi konteks tanpa injeksi: game/video layar penuh
+  (`SHQueryUserNotificationState` + window depan), rapat (mikrofon), presentasi,
+  dan berbagi layar. Konteks game ditahan 3 detik setelah keluar.
+- Enam tingkat respons per konteks: normal, redup+ciut, pindah posisi aman,
+  tembus klik, hanya peringatan kritis, dan sembunyi. Bisa ditimpa per aplikasi.
+- Penempatan aman otomatis (tengah atas → kiri atas → kanan atas → tengah
+  bawah), zona terlarang per game, geser menjauhi kursor 80 px, dan profil
+  aplikasi tersimpan di `app-profiles.json`.
+- Mode berbagi layar aman: isi notifikasi disembunyikan dan diganti “Ada pesan
+  baru”.
+- Jadwal salat lokal (Subuh -20°, Isya -18°) tanpa internet, dengan hitung mundur.
+- Peringatan cuaca BMKG opsional; mati secara bawaan, butuh kode ADM4 dan izin
+  internet saat dinyalakan.
+- Pengingat kebiasaan (minum, istirahat mata 20 menit, lama di depan layar)
+  dengan varian Mode Kocak.
+- Skenario otomatis: rapat (mic + durasi), belajar (timer + tahan notifikasi),
+  dan charging malam (jam).
+- Pintasan global Ctrl+Alt+Spasi / N / M dengan umpan balik singkat di kapsul.
+- Pelindung layar OLED: geser mikro 2 px tiap 4 menit, redup setelah idle 60
+  detik, sembunyi setelah 10 menit.
+- `Scripts/measure-cpu.ps1` untuk mencatat pemakaian CPU saat idle/tersembunyi.
+- 51 tes baru: konteks, tingkat respons, penempatan aman/profil, skenario,
+  kebiasaan, jadwal salat, parser BMKG, dan pelindung OLED (total 216).
+
+### Changed
+
+- Versi naik ke `0.3.0-beta`.
+- `IslandPresentation` membawa konteks, tingkat respons, opacity, dan tembus
+  klik; controller memaksa state minimal dan menyaring aktivitas non-kritis.
+
+## [0.2.0-beta] - 2026-11-03
 
 ### Added
 

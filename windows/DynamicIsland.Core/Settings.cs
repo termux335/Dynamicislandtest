@@ -18,7 +18,15 @@ public sealed record IslandSettings(
     PositionChoice Position = PositionChoice.TopCenter,
     PriorityPreset Priority = PriorityPreset.Bawaan,
     bool NotificationsEnabled = false,
-    bool StartWithWindows = false);
+    bool StartWithWindows = false,
+    bool SafeShare = true,
+    bool OledProtection = true,
+    bool PrayerEnabled = false,
+    bool WeatherEnabled = false,
+    string? WeatherAdm4 = null,
+    bool HabitsEnabled = false,
+    bool StudyMode = false,
+    ContextAwarenessSettings? Context = null);
 
 /// <summary>
 /// Menyimpan preferensi ke satu berkas JSON. Berkas hilang atau rusak tidak

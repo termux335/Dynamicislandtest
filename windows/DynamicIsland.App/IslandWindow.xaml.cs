@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using DynamicIsland.Core;
@@ -30,7 +32,15 @@ public partial class IslandWindow : Window
     private double lastTargetWidth = double.NaN;
     private double lastTargetHeight = double.NaN;
     private PlacementAnchor? lastAnchor;
+    private SafePosition? lastSafePosition;
     private bool longPressFired;
+
+    private HotkeyHost? hotkeys;
+    private bool clickThrough;
+    private bool oledVisible = true;
+    private double oledOpacity = 1;
+    private int oledOffsetX;
+    private int oledOffsetY;
 
     public IslandWindow(
         IslandViewModel model,
@@ -69,9 +79,61 @@ public partial class IslandWindow : Window
     /// <summary>Dipanggil saat menu "Pengaturan…" dipilih; App membuka jendelanya.</summary>
     public event Action? SettingsRequested;
 
+    /// <summary>Pintasan global ditekan (Tahap 4); App yang menjalankan aksinya.</summary>
+    public event Action<IslandHotkey>? HotkeyPressed;
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+
+        hotkeys = new HotkeyHost(this);
+        hotkeys.Pressed += key => HotkeyPressed?.Invoke(key);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        hotkeys?.Detach();
+        hotkeys = null;
+        base.OnClosed(e);
+    }
+
+    /// <summary>
+    /// Menerapkan pelindung layar OLED: geser mikro, redup saat idle, sembunyi
+    /// setelah idle lama. Tidak pernah mengubah isi aktivitas.
+    /// </summary>
+    public void ApplyOled(OledState state)
+    {
+        if (oledVisible == state.Visible
+            && Math.Abs(oledOpacity - state.Opacity) < 0.001
+            && oledOffsetX == state.OffsetX
+            && oledOffsetY == state.OffsetY)
+        {
+            return;
+        }
+
+        oledVisible = state.Visible;
+        oledOpacity = state.Opacity;
+        oledOffsetX = state.OffsetX;
+        oledOffsetY = state.OffsetY;
+        SyncBounds(animate: true);
+    }
+
     /// <summary>Menyesuaikan ukuran dan posisi kapsul dengan state sekarang.</summary>
     private void SyncBounds(bool animate)
     {
+        // Konteks tidak mengganggu bisa menyembunyikan kapsul sepenuhnya.
+        if (!model.ContextVisible || !oledVisible)
+        {
+            if (IsVisible) Hide();
+            return;
+        }
+
+        if (!IsVisible) Show();
+
+        var opacity = Math.Min(model.ContextOpacity, oledOpacity);
+        if (Math.Abs(Opacity - opacity) > 0.001) Opacity = opacity;
+        SetClickThrough(model.ContextClickThrough);
+
         var size = model.Size;
         var width = model.WindowWidth;
         var (left, top) = TargetFor(width, size.Height);
@@ -80,7 +142,8 @@ public partial class IslandWindow : Window
         if (IsVisible
             && width == lastTargetWidth
             && size.Height == lastTargetHeight
-            && model.Anchor == lastAnchor)
+            && model.Anchor == lastAnchor
+            && model.SafePosition == lastSafePosition)
         {
             return;
         }
@@ -88,6 +151,7 @@ public partial class IslandWindow : Window
         lastTargetWidth = width;
         lastTargetHeight = size.Height;
         lastAnchor = model.Anchor;
+        lastSafePosition = model.SafePosition;
 
         if (animate && !model.ReduceMotion && IsVisible)
         {
@@ -110,14 +174,56 @@ public partial class IslandWindow : Window
     {
         var area = SystemParameters.WorkArea;
         var inset = IslandMetrics.FloatingTopInset;
+        var screen = new ScreenArea(area.Left, area.Top, area.Width, area.Height);
 
-        return model.Anchor switch
+        var (left, top) = model.SafePosition is { } safe
+            ? SafePlacement.Spot(screen, width, height, safe)
+            : model.Anchor switch
+            {
+                PlacementAnchor.MidLeft => (area.Left + inset, area.Top + ((area.Height - height) / 2)),
+                PlacementAnchor.TopLeft => (area.Left + inset, area.Top + inset),
+                PlacementAnchor.TopRight => (area.Right - width - inset, area.Top + inset),
+                _ => (area.Left + ((area.Width - width) / 2), area.Top + inset),
+            };
+
+        // Hindari kursor (desktop), lalu geseran mikro OLED.
+        var (cursorX, cursorY) = CursorInDip();
+        var (dodgeX, dodgeY) = SafePlacement.Dodge(new ScreenArea(left, top, width, height), cursorX, cursorY);
+
+        left = Math.Clamp(left + dodgeX + oledOffsetX, area.Left, Math.Max(area.Left, area.Right - width));
+        top = Math.Clamp(top + dodgeY + oledOffsetY, area.Top, Math.Max(area.Top, area.Bottom - height));
+
+        return (left, top);
+    }
+
+    private (double X, double Y) CursorInDip()
+    {
+        if (!GetCursorPos(out var point)) return (-10_000, -10_000);
+
+        try
         {
-            PlacementAnchor.MidLeft => (area.Left + inset, area.Top + ((area.Height - height) / 2)),
-            PlacementAnchor.TopLeft => (area.Left + inset, area.Top + inset),
-            PlacementAnchor.TopRight => (area.Right - width - inset, area.Top + inset),
-            _ => (area.Left + ((area.Width - width) / 2), area.Top + inset),
-        };
+            var dip = PointFromScreen(new Point(point.X, point.Y));
+            return (dip.X, dip.Y);
+        }
+        catch (InvalidOperationException)
+        {
+            return (-10_000, -10_000);
+        }
+    }
+
+    /// <summary>Menembus klik saat konteks meminta; gaya window biasa, tanpa hook.</summary>
+    private void SetClickThrough(bool enabled)
+    {
+        if (clickThrough == enabled) return;
+
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero) return;
+
+        var style = GetWindowLongPtr(handle, GwlExStyle).ToInt64();
+        style = enabled ? style | WsExTransparent | WsExLayered : style & ~WsExTransparent;
+
+        SetWindowLongPtr(handle, GwlExStyle, new IntPtr(style));
+        clickThrough = enabled;
     }
 
     private void ApplyBounds(double left, double top, double width, double height)
@@ -324,6 +430,27 @@ public partial class IslandWindow : Window
         SettingsChanged?.Invoke();
     }
 
+    private void Context_Click(object sender, RoutedEventArgs e)
+    {
+        model.ContextEnabled = !model.ContextEnabled;
+        Log.Write($"konteks: {(model.ContextEnabled ? "aktif" : "nonaktif")}");
+        SettingsChanged?.Invoke();
+    }
+
+    private void SafeShare_Click(object sender, RoutedEventArgs e)
+    {
+        model.SafeShare = !model.SafeShare;
+        Log.Write($"berbagi layar aman: {(model.SafeShare ? "aktif" : "nonaktif")}");
+        SettingsChanged?.Invoke();
+    }
+
+    private void Study_Click(object sender, RoutedEventArgs e)
+    {
+        model.StudyMode = !model.StudyMode;
+        Log.Write($"mode belajar: {(model.StudyMode ? "aktif" : "nonaktif")}");
+        SettingsChanged?.Invoke();
+    }
+
     private void Notifications_Click(object sender, RoutedEventArgs e)
     {
         model.NotificationsEnabled = !model.NotificationsEnabled;
@@ -499,6 +626,27 @@ public partial class IslandWindow : Window
     }
 
     private void Quit_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
+
+    private const int GwlExStyle = -20;
+    private const int WsExTransparent = 0x20;
+    private const int WsExLayered = 0x80000;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct CursorPoint
+    {
+        public int X;
+        public int Y;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out CursorPoint point);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static extern IntPtr GetWindowLongPtr(IntPtr window, int index);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr window, int index, IntPtr value);
 
     private static T? FindAncestor<T>(DependencyObject? node) where T : DependencyObject
     {

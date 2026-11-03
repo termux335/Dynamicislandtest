@@ -32,6 +32,28 @@ public sealed class NotificationMonitor : IDisposable
     private uint? shownId;
     private bool started;
 
+    /// <summary>
+    /// Isi notifikasi disembunyikan saat layar dibagikan atau direkam. Judul dan
+    /// isi tetap di memori; yang berubah hanya teks yang tampil.
+    /// </summary>
+    public bool PrivacyHidden
+    {
+        get => privacyHidden;
+        set
+        {
+            if (privacyHidden == value) return;
+
+            privacyHidden = value;
+            shownId = null;
+            Log.Write(value ? "notifikasi: isi disembunyikan (berbagi layar/presentasi)" : "notifikasi: isi ditampilkan lagi");
+        }
+    }
+
+    /// <summary>Menahan notifikasi non-kritis selama mode belajar.</summary>
+    public bool Suppress { get; set; }
+
+    private bool privacyHidden;
+
     public NotificationMonitor(IslandController controller, Dispatcher dispatcher, IslandText text)
     {
         this.controller = controller;
@@ -148,6 +170,16 @@ public sealed class NotificationMonitor : IDisposable
             // Notifikasi yang sama tidak ditampilkan ulang tiap 3 detik.
             if (shownId == latest.Id) return;
 
+            // Mode belajar: notifikasi baru ditandai sudah dibaca supaya tidak
+            // menumpuk dan muncul sekaligus saat mode berakhir.
+            if (Suppress)
+            {
+                shownId = latest.Id;
+                latestId = latest.Id;
+                Log.Write("notifikasi: ditahan selama mode belajar");
+                return;
+            }
+
             var app = latest.AppInfo?.DisplayInfo?.DisplayName ?? string.Empty;
             var lines = latest.Notification?.Visual
                 ?.GetBinding(KnownNotificationBindings.ToastGeneric)
@@ -160,6 +192,12 @@ public sealed class NotificationMonitor : IDisposable
             var subtitle = lines.Count > 1
                 ? string.Join(" ", lines.Skip(1))
                 : string.IsNullOrEmpty(app) ? null : app;
+
+            if (privacyHidden)
+            {
+                title = text.Get("notification.hidden");
+                subtitle = null;
+            }
 
             latestId = latest.Id;
             shownId = latest.Id;

@@ -89,7 +89,7 @@ internal sealed class ForegroundWatcher : IDisposable
         var fullscreen = Covers(rect, info.Monitor, FullscreenTolerance);
         var maximized = !fullscreen && Covers(rect, info.Work, MaximizedTolerance);
 
-        return new ForegroundInfo(Categorize(process, fullscreen), fullscreen, maximized);
+        return new ForegroundInfo(Categorize(process, fullscreen), fullscreen, maximized, process);
     }
 
     private static string? ProcessName(uint processId)

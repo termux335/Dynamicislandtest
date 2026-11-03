@@ -1,10 +1,10 @@
-# Dynamic Island — Windows (beta, 0.2.0-beta)
+# Dynamic Island — Windows (beta, 0.3.0-beta)
 
 Kapsul mengambang di tengah atas layar, 30–480 px tergantung state. Windows tidak
 punya notch, jadi kapsul selalu melayang 8 px dari tepi atas.
 
-> **Status: beta publik (0.2.0-beta).** Fitur Tahap 1–3 sudah dipakai harian,
-> Tahap 4–5 belum dikerjakan. Build belum ditandatangani, jadi Windows SmartScreen
+> **Status: beta publik (0.3.0-beta).** Fitur Tahap 1–4 sudah dipakai harian;
+> Tahap 5 belum dikerjakan. Build belum ditandatangani, jadi Windows SmartScreen
 > bisa menampilkan peringatan saat pertama dijalankan. Angka versi ada di
 > `Directory.Build.props` (satu sumber untuk semua proyek), tampil di kaki jendela
 > Pengaturan, dan dicatat di log saat app mulai. Format berkas pengaturan masih
@@ -75,6 +75,81 @@ dan **Keluar**.
 Demo tanpa skrip: `dotnet run --project DynamicIsland.App -- --demo`
 atau set `ISLAND_DEMO=1`. Dua kapsul bisa langsung dinyalakan dengan
 `ISLAND_SECONDARY=1` (sama dengan mencentang **Dua kapsul** di menu).
+
+## Tahap 4: mode tidak mengganggu
+
+Kapsul sadar konteks dan bisa menyingkir sendiri. Deteksi memakai
+`SHQueryUserNotificationState`, window depan, dan status mikrofon — **tanpa**
+injeksi proses, DLL ke game, atau hook DirectX, jadi aman dari anti-cheat.
+
+| Konteks | Terdeteksi dari | Bawaan |
+|---|---|---|
+| Game layar penuh | Window depan menutup layar + proses game, atau status D3D Windows | Redup 40%, kapsul minimal, tembus klik, hanya peringatan kritis. Kembali normal 3 detik setelah keluar |
+| Video layar penuh | Peramban F11 atau status `QUNS_BUSY` | Redup dan ciut |
+| Rapat | Mikrofon dipakai aplikasi lain | Redup dan ciut, tombol mic tetap berfungsi |
+| Berbagi layar | Saklar menu **Mode berbagi layar aman** atau `ISLAND_SCREEN_SHARE=1` | Isi notifikasi disembunyikan; hanya “Ada pesan baru” |
+| Presentasi | Mode presentasi Windows | Redup, isi notifikasi disembunyikan |
+
+Tingkat respons bisa diganti per konteks dan per aplikasi di `settings.json`
+(`Context`), termasuk posisi aman, opacity, dan mode tampilan. Zona terlarang
+per game dan posisi terakhir disimpan di
+`%APPDATA%\DynamicIsland\app-profiles.json`.
+
+Penempatan aman mencoba **tengah atas → kiri atas → kanan atas → tengah bawah**,
+melewati zona terlarang, dan bergeser maksimal 48 px saat kursor mendekat 80 px.
+
+### Uji manual konteks
+
+```powershell
+$env:ISLAND_CONTEXT = 'game'      # game | video | meeting | share | presentation | normal
+$env:ISLAND_SCREEN_SHARE = '1'    # paksa mode berbagi layar aman
+```
+
+Konteks dipoll tiap 2 detik; game ditahan 3 detik setelah keluar. Semua transisi
+dicatat di `%TEMP%\dynamic-island.log`.
+
+### Kontrol tanpa keluar dari game
+
+| Pintasan | Aksi |
+|---|---|
+| `Ctrl+Alt+Spasi` | Putar/jeda musik |
+| `Ctrl+Alt+N` | Lagu berikutnya |
+| `Ctrl+Alt+M` | Bisukan/nyalakan mikrofon |
+
+Umpan balik singkat muncul di kapsul. Jika Windows menolak mendaftarkan
+pintasan (sudah dipakai app lain), alasannya masuk log dan app tetap jalan.
+
+### Modul Tahap 4
+
+| Modul | Saklar | Catatan |
+|---|---|---|
+| Mode tidak mengganggu | Menu klik kanan / Pengaturan | Bisa dimatikan; kapsul kembali normal seketika |
+| Berbagi layar aman | Menu klik kanan / Pengaturan | Deteksi berbagi layar manual karena Windows tidak punya API publik untuk itu |
+| Jadwal salat | Pengaturan | Dihitung lokal (Subuh -20°, Isya -18°), tanpa internet; koordinat Jakarta |
+| Cuaca BMKG | Pengaturan (izin internet diminta saat dinyalakan) | **Mati bawaan**; butuh kode `WeatherAdm4` di `settings.json` |
+| Pengingat kebiasaan | Pengaturan | Minum 45 menit, istirahat mata 20 menit, layar 2 jam; varian Mode Kocak |
+| Skenario otomatis | Otomatis | Rapat (mic + durasi), belajar (tahan notifikasi, saklar menu), charging malam (jam) |
+| Pelindung OLED | Pengaturan | Geser 2 px tiap 4 menit, redup setelah idle 60 detik, sembunyi setelah 10 menit |
+
+### Pemakaian CPU
+
+Di dalam game atau saat tersembunyi, target di bawah 1% CPU. Ukur dengan build
+yang sedang berjalan:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File windows\Scripts\measure-cpu.ps1 -Seconds 60
+```
+
+### Izin dan data Tahap 4
+
+- Status notifikasi Windows (`SHQueryUserNotificationState`) dan window depan:
+  tanpa izin, tanpa membaca isi aplikasi lain.
+- `GetLastInputInfo` untuk pelindung OLED: hanya **waktu** input terakhir, bukan
+  isi ketikan atau tombol.
+- Jadwal salat: koordinat bawaan Jakarta, dihitung di perangkat, tanpa jaringan.
+- Cuaca BMKG: satu permintaan HTTPS ke `api.bmkg.go.id` saat modul dinyalakan;
+  mati secara bawaan dan bisa dimatikan lagi kapan saja.
+- Profil aplikasi: hanya nama proses, posisi, opacity, dan tingkat respons.
 
 ## Fitur
 

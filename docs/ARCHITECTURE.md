@@ -21,10 +21,12 @@ DynamicIsland.Core (net8.0, tanpa UI)
   ├── IslandMetrics, DisplayMode      ukuran kapsul per state
   ├── TimerEngine, CalendarPlan, IcsCalendar, Alerts
   ├── Placement, Customization, Meetings, Settings
+  ├── ContextAwareness, SafePlacement, AppProfiles   mode tidak mengganggu
+  ├── Scenarios, Habits, PrayerTimes, WeatherAlert, OledGuard
   └── Strings, Lyrics, LyricsFiles
         ▲
         │ dites oleh
-DynamicIsland.Core.Tests (xunit, 165 tes)
+DynamicIsland.Core.Tests (xunit, 216 tes)
 ```
 
 Aturan pemisahan: **Core tidak boleh menyentuh WPF atau P/Invoke.** Semua yang
@@ -77,6 +79,21 @@ I/O) berjalan di thread lain dan hasilnya dikembalikan lewat
 | `%APPDATA%\DynamicIsland\lyrics\*.lrc` | lirik lokal (dibaca, tidak diunduh) |
 | `%TEMP%\dynamic-island.log` | log uji manual |
 | `%TEMP%\dynamic-island.ics` | kalender uji (bisa dialihkan `ISLAND_ICS`) |
+| `%APPDATA%\DynamicIsland\app-profiles.json` | posisi/opacity terakhir per aplikasi (bisa dialihkan `ISLAND_APP_PROFILES`) |
+
+## Mode tidak mengganggu (Tahap 4)
+
+`ContextMonitor` (App) mengumpulkan sinyal dari window depan, mikrofon, dan
+`SHQueryUserNotificationState`, lalu `ContextRules.Classify` memilih satu
+konteks. `ContextDetector` menahan konteks game 3 detik setelah keluar.
+`ContextResolver` menerapkan preferensi per konteks/aplikasi dan menghasilkan
+`ResponseEffect`; `IslandController.Publish` memaksa state minimal, menyaring
+aktivitas non-kritis, dan menandai `Visible`/`ClickThrough`/`Opacity`.
+`IslandWindow` yang mengeksekusi: ubah opacity, pasang `WS_EX_TRANSPARENT`,
+sembunyikan window, dan pindah ke posisi aman. Tidak ada hook atau injeksi.
+
+Saklar modul (konteks, berbagi aman, kebiasaan, salat, cuaca, OLED) disimpan di
+`IslandSettings` dan diterapkan lewat `App.ApplyModules` tanpa restart.
 
 ## Peta tes
 
@@ -93,6 +110,9 @@ I/O) berjalan di thread lain dan hasilnya dikembalikan lewat
 | `SettingsTests`, `CustomizationTests` | persistensi dan preset |
 | `StringsTests` | paritas kunci dua bahasa, fallback humor, a11y serius |
 | `LyricsTests`, `LyricsFilesTests`, `LyricsLibraryTests` | parser LRC dan nama berkas |
+| `ContextAwarenessTests`, `ContextControllerTests` | klasifikasi konteks, tingkat respons, tahan 3 detik, penyaringan kritis |
+| `SafePlacementTests` | urutan posisi aman, zona terlarang, dodge kursor, profil aplikasi |
+| `Stage4ModuleTests` | skenario, kebiasaan, jadwal salat, BMKG, pelindung OLED |
 
 Menambah perilaku baru berarti menambah tes di salah satu berkas ini; tes
 prioritas dan transisi state wajib ada sebelum UI-nya.

@@ -11,6 +11,7 @@ public partial class App : Application, IDisposable
     private IslandController? controller;
     private IslandEventPipe? pipe;
     private DispatcherTimer? ticker;
+    private DispatcherTimer? oledTimer;
     private BatteryMonitor? batteryMonitor;
     private DriveMonitor? driveMonitor;
     private CalendarMonitor? calendarMonitor;
@@ -19,8 +20,19 @@ public partial class App : Application, IDisposable
     private MediaMonitor? mediaMonitor;
     private MicrophoneMonitor? microphoneMonitor;
     private NotificationMonitor? notificationMonitor;
+    private ContextMonitor? contextMonitor;
+    private PrayerMonitor? prayerMonitor;
+    private WeatherMonitor? weatherMonitor;
+    private HabitMonitor? habitMonitor;
+    private ScenarioMonitor? scenarioMonitor;
+    private IdleWatcher? idleWatcher;
     private IslandViewModel? model;
+    private IslandWindow? window;
     private SettingsWindow? settingsWindow;
+
+    private ContextAwarenessSettings contextSettings = new();
+    private string? weatherAdm4;
+    private OledPhase lastOledPhase = OledPhase.Active;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -29,13 +41,15 @@ public partial class App : Application, IDisposable
         controller = new IslandController();
         controller.OnError = message => Log.Write("event diabaikan: " + message);
 
-        // Preferensi dari sesi sebelumnya (mode, dua kapsul, penempatan, bahasa,
-        // kepribadian, aksen, posisi, prioritas).
+        // Preferensi dari sesi sebelumnya.
         var settings = SettingsStore.Load();
         var firstRun = !SettingsStore.Exists();
         controller.DisplayMode = settings.DisplayMode;
         controller.ShowsSecondary = settings.ShowsSecondary;
         controller.PriorityPreset = settings.Priority;
+
+        contextSettings = settings.Context ?? new ContextAwarenessSettings();
+        weatherAdm4 = settings.WeatherAdm4;
 
         var text = new IslandText(settings.Language, settings.Humor);
         Theme.Apply(settings.Accent);
@@ -43,6 +57,13 @@ public partial class App : Application, IDisposable
         var model = new IslandViewModel(controller, text, settings.Accent, settings.Position)
         {
             AutoPlacement = settings.AutoPlacement,
+            ContextEnabled = contextSettings.Enabled,
+            SafeShare = settings.SafeShare,
+            OledProtection = settings.OledProtection,
+            PrayerEnabled = settings.PrayerEnabled,
+            HabitsEnabled = settings.HabitsEnabled,
+            StudyMode = settings.StudyMode,
+            WeatherEnabled = settings.WeatherEnabled,
         };
         this.model = model;
 
@@ -55,6 +76,7 @@ public partial class App : Application, IDisposable
         notificationMonitor = notifications;
 
         var window = new IslandWindow(model, controller, timer, media, notifications);
+        this.window = window;
         window.SettingsChanged += SaveSettings;
         var calendar = new CalendarMonitor(controller, Dispatcher, text);
         calendarMonitor = calendar;
@@ -80,21 +102,16 @@ public partial class App : Application, IDisposable
         MainWindow = window;
         window.Show();
 
-        // Uji manual DPI/multi-monitor: angka DPI nyata per monitor dan ukuran
-        // kapsul dalam DIP dicatat sekali saat mulai.
         DisplayInfo.LogMonitors();
         var scale = System.Windows.Media.VisualTreeHelper.GetDpi(window);
         Log.Write(
             $"kapsul: {model.Size.Width}x{model.Size.Height} DIP di ({window.Left:0},{window.Top:0}) " +
-            $"pada skala {scale.DpiScaleX:0.##}x (" + $"{scale.PixelsPerDip * 96:0} dpi)");
+            $"pada skala {scale.DpiScaleX:0.##}x ({scale.PixelsPerDip * 96:0} dpi)");
 
         window.SettingsRequested += () => OpenSettings(firstRun: false);
 
-        // Autostart dibaca dari registry, bukan dari berkas: itu sumber sebenarnya.
         model.StartWithWindows = StartupRegistration.IsEnabled();
 
-        // Onboarding hanya saat belum ada berkas pengaturan, dan tidak saat demo
-        // atau uji manual (yang tidak boleh terhalang jendela).
         var demo = e.Args.Contains("--demo") || Environment.GetEnvironmentVariable("ISLAND_DEMO") == "1";
         if (firstRun && !demo && Environment.GetEnvironmentVariable("ISLAND_NO_ONBOARDING") != "1")
         {
@@ -102,7 +119,6 @@ public partial class App : Application, IDisposable
             Dispatcher.BeginInvoke(() => OpenSettings(firstRun: true), DispatcherPriority.Background);
         }
 
-        // Uji manual autostart: daftar, baca, cabut, lalu catat hasilnya.
         if (Environment.GetEnvironmentVariable("ISLAND_AUTOSTART_CHECK") == "1")
         {
             StartupRegistration.SelfCheck();
@@ -134,8 +150,7 @@ public partial class App : Application, IDisposable
         timer.Start();
         media.Start();
 
-        // Tahap 1 (sisa): rapat lewat status mikrofon, dan notifikasi Windows
-        // bila pengguna menyalakannya (izin diminta saat itu juga).
+        // Tahap 1 (sisa): rapat lewat status mikrofon, dan notifikasi Windows.
         microphoneMonitor = new MicrophoneMonitor(controller, Dispatcher, text);
 
         try
@@ -151,38 +166,170 @@ public partial class App : Application, IDisposable
         model.NotificationsEnabled = settings.NotificationsEnabled;
         if (settings.NotificationsEnabled) notifications.SetEnabled(true);
 
-        // Jalan pintas uji manual, sama seperti ISLAND_SECONDARY.
         if (Environment.GetEnvironmentVariable("ISLAND_NOTIFICATIONS") == "1")
         {
             model.NotificationsEnabled = true;
             notifications.SetEnabled(true);
         }
 
-        // Tahap 3: dua kapsul bisa dinyalakan dari menu klik kanan, atau lewat
-        // variabel ini untuk uji manual tanpa menyentuh menu.
         if (Environment.GetEnvironmentVariable("ISLAND_SECONDARY") == "1") controller.ShowsSecondary = true;
 
-        // Tahap 3: penempatan adaptif untuk game layar penuh dan peramban maximized.
         foregroundWatcher = new ForegroundWatcher(Dispatcher);
         foregroundWatcher.Changed += info =>
         {
             model.SetForeground(info);
             Log.Write(info is null
                 ? "window depan tidak terbaca; kapsul di tengah atas"
-                : $"window depan: {info.Category}, layar penuh {info.IsFullscreen}, maximized {info.IsMaximized}");
+                : $"window depan: {info.Category}, layar penuh {info.IsFullscreen}, maximized {info.IsMaximized}, proses {info.ProcessName}");
         };
         foregroundWatcher.Start();
 
-        if (demo)
+        // Tahap 4: Mode Tidak Mengganggu dan modul-modulnya.
+        var profiles = new AppProfileStore();
+        if (profiles.Load()) Log.Write($"profil aplikasi: {profiles.All.Count} dimuat");
+
+        contextMonitor = new ContextMonitor(controller, Dispatcher)
         {
-            DemoEvents.Seed(controller);
+            Settings = contextSettings,
+            Enabled = model.ContextEnabled,
+            Profiles = profiles,
+        };
+        contextMonitor.Attach(foregroundWatcher, microphoneMonitor);
+        contextMonitor.ResolutionChanged += OnResolutionChanged;
+        contextMonitor.Start();
+
+        scenarioMonitor = new ScenarioMonitor(controller, Dispatcher, text, () => contextMonitor?.Current ?? IslandContext.Normal)
+        {
+            StudyMode = () => model.StudyMode,
+        };
+        scenarioMonitor.PlanChanged += plan => notifications.Suppress = plan.SuppressNotifications;
+        scenarioMonitor.Start();
+
+        prayerMonitor = new PrayerMonitor(controller, Dispatcher, text);
+        prayerMonitor.SetEnabled(model.PrayerEnabled);
+
+        weatherMonitor = new WeatherMonitor(controller, Dispatcher, text);
+        weatherMonitor.Configure(model.WeatherEnabled, weatherAdm4);
+
+        habitMonitor = new HabitMonitor(controller, Dispatcher, text);
+        habitMonitor.Configure(model.HabitsEnabled);
+        habitMonitor.Start();
+
+        idleWatcher = new IdleWatcher(Dispatcher);
+        idleWatcher.Start();
+
+        oledTimer = new DispatcherTimer(
+            TimeSpan.FromSeconds(5),
+            DispatcherPriority.Background,
+            (_, _) => ApplyOled(),
+            Dispatcher);
+        oledTimer.Start();
+
+        window.HotkeyPressed += key => HandleHotkey(key, media, microphoneMonitor);
+
+        if (demo) DemoEvents.Seed(controller);
+    }
+
+    /// <summary>Konteks berubah: perbarui posisi aman, privasi, dan catatan log.</summary>
+    private void OnResolutionChanged(ContextResolution resolution)
+    {
+        if (model is null) return;
+
+        model.SafePosition = resolution.Position;
+        UpdatePrivacy();
+
+        var suffix = string.IsNullOrEmpty(resolution.App) ? string.Empty : $" ({resolution.App})";
+        Log.Write($"konteks: {resolution.Context} → tingkat {resolution.Level}{suffix}");
+    }
+
+    /// <summary>Isi notifikasi hanya disembunyikan bila pengguna mengizinkan dan layar sedang dibagikan.</summary>
+    private void UpdatePrivacy()
+    {
+        if (notificationMonitor is null || model is null) return;
+
+        var context = contextMonitor?.Current ?? IslandContext.Normal;
+        notificationMonitor.PrivacyHidden = model.SafeShare && ContextRules.HidesNotificationContent(context);
+    }
+
+    /// <summary>Menerapkan perubahan saklar modul tanpa restart.</summary>
+    private void ApplyModules()
+    {
+        if (model is null) return;
+
+        contextSettings = contextSettings with { Enabled = model.ContextEnabled };
+
+        if (contextMonitor is not null)
+        {
+            contextMonitor.Settings = contextSettings;
+            contextMonitor.Enabled = model.ContextEnabled;
+            contextMonitor.Poll();
+        }
+
+        prayerMonitor?.SetEnabled(model.PrayerEnabled);
+        weatherMonitor?.Configure(model.WeatherEnabled, weatherAdm4);
+        habitMonitor?.Configure(model.HabitsEnabled);
+        scenarioMonitor?.Poll();
+
+        if (notificationMonitor is not null && scenarioMonitor is not null)
+        {
+            notificationMonitor.Suppress = scenarioMonitor.Plan.SuppressNotifications;
+        }
+
+        UpdatePrivacy();
+    }
+
+    /// <summary>Pelindung layar OLED: geser mikro, redup, lalu sembunyi saat idle.</summary>
+    private void ApplyOled()
+    {
+        if (window is null || idleWatcher is null || model is null) return;
+
+        var state = OledGuard.StateFor(idleWatcher.Idle, idleWatcher.Uptime, model.OledProtection);
+        window.ApplyOled(state);
+
+        if (state.Phase != lastOledPhase)
+        {
+            Log.Write($"oled: {state.Phase} setelah idle {idleWatcher.Idle.TotalSeconds:0} detik");
+            lastOledPhase = state.Phase;
         }
     }
 
-    /// <summary>
-    /// Membuka onboarding (jalan pertama) atau pengaturan. Perubahan langsung
-    /// berlaku karena jendela memakai <see cref="IslandViewModel"/> yang sama.
-    /// </summary>
+    /// <summary>Pintasan global: kontrol tanpa keluar dari game, dengan umpan balik singkat.</summary>
+    private void HandleHotkey(IslandHotkey key, MediaMonitor media, MicrophoneMonitor? microphone)
+    {
+        switch (key)
+        {
+            case IslandHotkey.PlayPause:
+                var wasPlaying = model?.MediaPlaying == true;
+                media.TogglePlayPause();
+                Feedback(wasPlaying ? "hotkey.paused" : "hotkey.playing");
+                break;
+
+            case IslandHotkey.Next:
+                media.Next();
+                Feedback("hotkey.next");
+                break;
+
+            case IslandHotkey.MuteMic:
+                microphone?.ToggleMute();
+                Feedback(microphone?.IsMuted == true ? "hotkey.muted" : "hotkey.unmuted");
+                break;
+        }
+    }
+
+    private void Feedback(string key)
+    {
+        if (controller is null || model is null) return;
+
+        controller.Refresh(new Activity(
+            id: "hotkey-feedback",
+            kind: ActivityKind.Notification,
+            priority: 96,
+            title: model.Text.Get("hotkey.title"),
+            subtitle: model.Text.Get(key),
+            isLive: false,
+            expiresAt: DateTimeOffset.Now.AddMilliseconds(1600)));
+    }
+
     private void OpenSettings(bool firstRun)
     {
         if (model is null) return;
@@ -201,8 +348,7 @@ public partial class App : Application, IDisposable
         window.Closed += (_, _) =>
         {
             settingsWindow = null;
-            // Menutup lewat tombol X tetap dianggap selesai, supaya onboarding
-            // tidak muncul lagi setiap kali app dijalankan.
+            // Menutup lewat tombol X tetap dianggap selesai.
             SaveSettings();
         };
 
@@ -210,7 +356,7 @@ public partial class App : Application, IDisposable
         window.Show();
     }
 
-    /// <summary>Menyimpan mode, dua kapsul, dan penempatan setelah diubah dari menu.</summary>
+    /// <summary>Menyimpan mode, konteks, dan saklar modul Tahap 4.</summary>
     private void SaveSettings()
     {
         if (controller is null || model is null) return;
@@ -225,9 +371,19 @@ public partial class App : Application, IDisposable
             model.Position,
             controller.PriorityPreset,
             model.NotificationsEnabled,
-            model.StartWithWindows);
+            model.StartWithWindows,
+            model.SafeShare,
+            model.OledProtection,
+            model.PrayerEnabled,
+            model.WeatherEnabled,
+            weatherAdm4,
+            model.HabitsEnabled,
+            model.StudyMode,
+            contextSettings with { Enabled = model.ContextEnabled });
 
         if (!SettingsStore.Save(settings)) Log.Write("pengaturan: gagal disimpan");
+
+        ApplyModules();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -243,6 +399,7 @@ public partial class App : Application, IDisposable
         disposed = true;
 
         ticker?.Stop();
+        oledTimer?.Stop();
         batteryMonitor?.Dispose();
         driveMonitor?.Dispose();
         calendarMonitor?.Dispose();
@@ -251,6 +408,12 @@ public partial class App : Application, IDisposable
         mediaMonitor?.Dispose();
         microphoneMonitor?.Dispose();
         notificationMonitor?.Dispose();
+        contextMonitor?.Dispose();
+        prayerMonitor?.Dispose();
+        weatherMonitor?.Dispose();
+        habitMonitor?.Dispose();
+        scenarioMonitor?.Dispose();
+        idleWatcher?.Dispose();
         pipe?.Dispose();
 
         GC.SuppressFinalize(this);

@@ -5,9 +5,14 @@ timer, rapat, notifikasi, dan aktivitas lain — lalu ciut sendiri saat tidak
 dibutuhkan. Windows tidak punya notch, jadi kapsulnya melayang 8 px dari tepi
 atas.
 
-Status: **0.2.0-beta**. Fitur Tahap 1–3 sudah dipakai harian; Tahap 4 (mode
-tidak mengganggu) dan Tahap 5 (modul tambahan) belum dikerjakan. Belum
-ditandatangani dan belum ada installer MSIX.
+Status: **0.3.0-beta**. Fitur Tahap 1–4 sudah dipakai harian, termasuk mode tidak
+mengganggu (game, video layar penuh, rapat, berbagi layar), mode berbagi layar
+aman, jadwal salat lokal, peringatan cuaca BMKG opsional, pengingat kebiasaan,
+skenario otomatis, dan pelindung layar OLED. Tahap 5 (modul tambahan) belum
+dikerjakan. Belum ditandatangani dan belum ada installer MSIX.
+
+Kontrol tanpa keluar dari game: **Ctrl+Alt+Spasi** putar/jeda, **Ctrl+Alt+N**
+lagu berikutnya, **Ctrl+Alt+M** bisukan mikrofon.
 
 ## Isi repo
 
@@ -19,6 +24,21 @@ ditandatangani dan belum ada installer MSIX.
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Lapisan, alur data, threading, dan peta tes |
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | Data yang dibaca/ditulis dan izin tiap fitur |
 | [`windows/README.md`](windows/README.md) | Cara menjalankan, daftar fitur, izin, dan batasan |
+
+## Mode tidak mengganggu (Tahap 4)
+
+Saat game layar penuh, video layar penuh, rapat, presentasi, atau berbagi layar,
+kapsul menyesuaikan diri: redup 40%, ciut, pindah ke posisi aman, tembus klik,
+hanya peringatan kritis, atau sembunyi. Konteks game ditahan 3 detik setelah
+keluar supaya tidak berkedip saat Alt-Tab.
+
+Deteksi memakai `SHQueryUserNotificationState` dan window depan — tanpa injeksi,
+DLL ke proses lain, atau hook DirectX. Uji manual:
+
+```powershell
+$env:ISLAND_CONTEXT = 'game'     # game | video | meeting | share | presentation | normal
+$env:ISLAND_SCREEN_SHARE = '1'  # paksa mode berbagi layar aman
+```
 
 ## Mulai cepat
 

@@ -71,7 +71,8 @@ public static class BatteryAlert
             title: strings.Get("alert.batteryLow.title"),
             subtitle: strings.Format("alert.batteryLow.subtitle", level),
             isLive: false,
-            expiresAt: now.AddMilliseconds(IslandEvent.DefaultTtlMs));
+            expiresAt: now.AddMilliseconds(IslandEvent.DefaultTtlMs),
+            isCritical: true);
     }
 
     public static Activity Charging(int level, DateTimeOffset now, IslandText? text = null)

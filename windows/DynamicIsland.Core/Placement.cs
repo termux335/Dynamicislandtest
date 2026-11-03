@@ -20,7 +20,8 @@ public enum ForegroundCategory
 public sealed record ForegroundInfo(
     ForegroundCategory Category,
     bool IsFullscreen,
-    bool IsMaximized);
+    bool IsMaximized,
+    string? ProcessName = null);
 
 /// <summary>Posisi kapsul di layar.</summary>
 public enum PlacementAnchor

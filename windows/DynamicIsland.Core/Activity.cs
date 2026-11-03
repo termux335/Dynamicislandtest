@@ -112,7 +112,8 @@ public sealed record Activity
         DateTimeOffset? expiresAt = null,
         TimeSpan? position = null,
         TimeSpan? duration = null,
-        string? caption = null)
+        string? caption = null,
+        bool? isCritical = null)
     {
         Id = id;
         Kind = kind;
@@ -127,6 +128,7 @@ public sealed record Activity
         Position = position;
         Duration = duration;
         Caption = caption;
+        IsCritical = isCritical ?? kind == ActivityKind.Call;
     }
 
     public string Id { get; init; }
@@ -156,4 +158,10 @@ public sealed record Activity
     /// baris lirik yang sedang berlaku.
     /// </summary>
     public string? Caption { get; init; }
+
+    /// <summary>
+    /// Boleh lewat saat Mode Tidak Mengganggu hanya mengizinkan peringatan
+    /// kritis. Panggilan selalu kritis; baterai sangat rendah menandai dirinya.
+    /// </summary>
+    public bool IsCritical { get; init; }
 }

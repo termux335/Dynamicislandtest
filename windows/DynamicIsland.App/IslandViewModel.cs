@@ -96,6 +96,167 @@ public sealed class IslandViewModel : INotifyPropertyChanged
         }
     }
 
+    // --- Mode tidak mengganggu dan modul Tahap 4 ---
+
+    public IslandContext Context => presentation.Context;
+
+    public bool ContextVisible => presentation.Visible;
+
+    public bool ContextClickThrough => presentation.ClickThrough;
+
+    public double ContextOpacity => presentation.Opacity;
+
+    public bool IsContextActive => presentation.Context != IslandContext.Normal;
+
+    /// <summary>Label konteks untuk pembaca layar; selalu versi serius.</summary>
+    public string ContextLabel => text.FormatSerious(
+        "a11y.context",
+        text.GetSerious(Context switch
+        {
+            IslandContext.Game => "context.game",
+            IslandContext.VideoFullscreen => "context.video",
+            IslandContext.Meeting => "context.meeting",
+            IslandContext.ScreenShare => "context.share",
+            IslandContext.Presentation => "context.presentation",
+            _ => "context.normal",
+        }));
+
+    private SafePosition? safePosition;
+
+    /// <summary>Posisi aman dari aturan konteks; null berarti posisi biasa.</summary>
+    public SafePosition? SafePosition
+    {
+        get => safePosition;
+        set
+        {
+            if (safePosition == value) return;
+            safePosition = value;
+            RaiseAll();
+        }
+    }
+
+    private bool contextEnabled = true;
+
+    public bool ContextEnabled
+    {
+        get => contextEnabled;
+        set
+        {
+            if (contextEnabled == value) return;
+            contextEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool safeShare = true;
+
+    /// <summary>Sembunyikan isi notifikasi saat berbagi atau merekam layar.</summary>
+    public bool SafeShare
+    {
+        get => safeShare;
+        set
+        {
+            if (safeShare == value) return;
+            safeShare = value;
+            RaiseAll();
+        }
+    }
+
+    private bool studyMode;
+
+    public bool StudyMode
+    {
+        get => studyMode;
+        set
+        {
+            if (studyMode == value) return;
+            studyMode = value;
+            RaiseAll();
+        }
+    }
+
+    private bool prayerEnabled;
+
+    public bool PrayerEnabled
+    {
+        get => prayerEnabled;
+        set
+        {
+            if (prayerEnabled == value) return;
+            prayerEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool habitsEnabled;
+
+    public bool HabitsEnabled
+    {
+        get => habitsEnabled;
+        set
+        {
+            if (habitsEnabled == value) return;
+            habitsEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    private bool oledProtection = true;
+
+    public bool OledProtection
+    {
+        get => oledProtection;
+        set
+        {
+            if (oledProtection == value) return;
+            oledProtection = value;
+            RaiseAll();
+        }
+    }
+
+    private bool weatherEnabled;
+
+    public bool WeatherEnabled
+    {
+        get => weatherEnabled;
+        set
+        {
+            if (weatherEnabled == value) return;
+            weatherEnabled = value;
+            RaiseAll();
+        }
+    }
+
+    public string MenuContext => text.Get("menu.context");
+
+    public string MenuSafeShare => text.Get("menu.safeShare");
+
+    public string MenuStudy => text.Get("menu.study");
+
+    public string LabelContextTitle => text.Get("settings.contextTitle");
+
+    public string LabelContextEnabled => text.Get("menu.context");
+
+    public string LabelContextNote => text.Get("settings.contextNote");
+
+    public string LabelSafeShare => text.Get("settings.safeShare");
+
+    public string LabelSafeShareNote => text.Get("settings.safeShareNote");
+
+    public string LabelPrayer => text.Get("settings.prayer");
+
+    public string LabelPrayerNote => text.Get("settings.prayerNote");
+
+    public string LabelHabits => text.Get("settings.habits");
+
+    public string LabelHabitsNote => text.Get("settings.habitsNote");
+
+    public string LabelOled => text.Get("settings.oled");
+
+    public string LabelWeather => text.Get("settings.weather");
+
+    public string LabelWeatherNote => text.Get("settings.weatherNote");
+
     // --- Penempatan adaptif (Tahap 3) ---
 
     private ForegroundInfo? foreground;

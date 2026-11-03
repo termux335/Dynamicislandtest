@@ -48,6 +48,12 @@ public partial class SettingsWindow : Window
         AccentGreen.IsChecked = model.IsAccentHijau;
         HumorCheck.IsChecked = model.Humor == HumorMode.Kocak;
         AutostartCheck.IsChecked = model.StartWithWindows;
+        ContextCheck.IsChecked = model.ContextEnabled;
+        SafeShareCheck.IsChecked = model.SafeShare;
+        HabitsCheck.IsChecked = model.HabitsEnabled;
+        PrayerCheck.IsChecked = model.PrayerEnabled;
+        OledCheck.IsChecked = model.OledProtection;
+        WeatherCheck.IsChecked = model.WeatherEnabled;
 
         ready = true;
     }
@@ -123,6 +129,63 @@ public partial class SettingsWindow : Window
 
         AutostartStatus.Visibility = Visibility.Collapsed;
         model.StartWithWindows = wanted;
+    }
+
+    private void Context_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.ContextEnabled = ContextCheck.IsChecked == true;
+    }
+
+    private void SafeShare_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.SafeShare = SafeShareCheck.IsChecked == true;
+    }
+
+    private void Habits_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.HabitsEnabled = HabitsCheck.IsChecked == true;
+    }
+
+    private void Prayer_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.PrayerEnabled = PrayerCheck.IsChecked == true;
+    }
+
+    private void Oled_Changed(object sender, RoutedEventArgs e)
+    {
+        if (ready) model.OledProtection = OledCheck.IsChecked == true;
+    }
+
+    /// <summary>
+    /// Cuaca memakai internet, jadi izinnya diminta saat dinyalakan. Menolak
+    /// mengembalikan kotak centang dan tidak pernah mengaktifkan modul.
+    /// </summary>
+    private void Weather_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!ready) return;
+
+        var wanted = WeatherCheck.IsChecked == true;
+
+        if (wanted)
+        {
+            var answer = MessageBox.Show(
+                this,
+                model.LabelWeatherNote,
+                model.LabelWeather,
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                ready = false;
+                WeatherCheck.IsChecked = false;
+                ready = true;
+                model.WeatherEnabled = false;
+                return;
+            }
+        }
+
+        model.WeatherEnabled = wanted;
     }
 
     private void Primary_Click(object sender, RoutedEventArgs e)

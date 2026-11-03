@@ -57,6 +57,11 @@
             <MenuItem Header="{Binding MenuHumor}" IsCheckable="True" IsChecked="{Binding IsHumorKocak, Mode=OneWay}" Click="Humor_Click" />
             <MenuItem Header="{Binding MenuNotifications}" IsCheckable="True" IsChecked="{Binding NotificationsEnabled, Mode=OneWay}" Click="Notifications_Click" />
             <Separator />
+            <MenuItem Header="{Binding MenuContext}" IsCheckable="True" IsChecked="{Binding ContextEnabled, Mode=OneWay}" Click="Context_Click" />
+            <MenuItem Header="{Binding MenuSafeShare}" IsCheckable="True" IsChecked="{Binding SafeShare, Mode=OneWay}" Click="SafeShare_Click" />
+            <MenuItem Header="{Binding MenuStudy}" IsCheckable="True" IsChecked="{Binding StudyMode, Mode=OneWay}" Click="Study_Click" />
+            <Separator />
+            <Separator />
             <MenuItem Header="{Binding MenuSettings}" Click="Settings_Click" />
             <MenuItem Header="{Binding MenuQuit}" Click="Quit_Click" />
         </ContextMenu>

@@ -81,6 +81,23 @@
                        Margin="0,4,0,0"
                        Visibility="Collapsed" />
 
+            <TextBlock Text="{Binding LabelContextTitle}" Style="{StaticResource Section}" />
+            <CheckBox x:Name="ContextCheck" Content="{Binding LabelContextEnabled}" Checked="Context_Changed" Unchecked="Context_Changed" />
+            <CheckBox x:Name="SafeShareCheck" Content="{Binding LabelSafeShare}" Margin="0,10,0,0" Checked="SafeShare_Changed" Unchecked="SafeShare_Changed" />
+            <TextBlock Text="{Binding LabelSafeShareNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+            <TextBlock Text="{Binding LabelContextNote}" Style="{StaticResource Muted}" Margin="0,8,0,0" />
+
+            <CheckBox x:Name="HabitsCheck" Content="{Binding LabelHabits}" Margin="0,14,0,0" Checked="Habits_Changed" Unchecked="Habits_Changed" />
+            <TextBlock Text="{Binding LabelHabitsNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="PrayerCheck" Content="{Binding LabelPrayer}" Margin="0,14,0,0" Checked="Prayer_Changed" Unchecked="Prayer_Changed" />
+            <TextBlock Text="{Binding LabelPrayerNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
+            <CheckBox x:Name="OledCheck" Content="{Binding LabelOled}" Margin="0,14,0,0" Checked="Oled_Changed" Unchecked="Oled_Changed" />
+
+            <CheckBox x:Name="WeatherCheck" Content="{Binding LabelWeather}" Margin="0,14,0,0" Checked="Weather_Changed" Unchecked="Weather_Changed" />
+            <TextBlock Text="{Binding LabelWeatherNote}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+
             <TextBlock Text="{Binding LabelPermissions}" Style="{StaticResource Muted}" Margin="0,18,0,0" />
 
             <Button x:Name="PrimaryButton"
