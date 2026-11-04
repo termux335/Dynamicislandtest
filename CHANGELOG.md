@@ -4,6 +4,21 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan
 [Semantic Versioning](https://semver.org/lang/id/). Semua perubahan yang terlihat
 pengguna dicatat di sini; detail teknis ada di riwayat git.
 
+## [Unreleased]
+
+### Added
+
+- Relay hook Claude Code asli: **Pengaturan → Status agen AI** bisa memasang
+  hook ke `~/.claude/settings.json` (dengan cadangan `.bak`), meneruskan
+  `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, dan `SessionEnd`, lalu
+  menampilkan kartu izin dengan tombol **Setujui/Tolak** tanpa pindah jendela.
+  Tanpa kunci API; jawaban yang tidak datang dalam 25 detik dikembalikan sebagai
+  `ask` agar prompt normal Claude Code tetap muncul. Ada **Lepas Hook** dan
+  **Uji Kartu Izin**.
+- `release.ps1 -GitHubToken` mengunggah zip dan checksum ke GitHub Release
+  `v<versi>`, membuat rilis dari commit aktif bila belum ada, dan mengganti aset
+  bernama sama sehingga aman dijalankan ulang.
+
 ## [0.6.0-beta] - 2026-11-03
 
 Tahap 5c: modul opsional dan penutup Tahap 5.

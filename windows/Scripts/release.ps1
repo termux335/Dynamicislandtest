@@ -14,6 +14,11 @@
     Ikut membawa runtime .NET (~150 MB). Bawaan: framework-dependent (~2 MB,
     butuh .NET 8 Desktop Runtime).
 
+.PARAMETER GitHubToken
+    Unggah zip dan checksum ke GitHub Release bertag v<versi>. Tanpa parameter
+    ini skrip hanya menulis berkas ke dist/. Token butuh izin Contents: write.
+    Aset dengan nama yang sama diganti, jadi skrip boleh dijalankan ulang.
+
 .PARAMETER SkipTests
     Lewati tes. Hanya untuk build cepat saat menguji skrip ini sendiri.
 
@@ -22,9 +27,13 @@
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File windows\Scripts\release.ps1 -SelfContained
+
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File windows\Scripts\release.ps1 -GitHubToken $env:GITHUB_TOKEN
 #>
 param(
     [switch]$SelfContained,
+    [string]$GitHubToken,
     [switch]$SkipTests
 )
 
@@ -84,6 +93,69 @@ $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 $sizeMb = [math]::Round((Get-Item $zip).Length / 1MB, 1)
 Write-Host "Selesai: $zip ($sizeMb MB)" -ForegroundColor Green
 Write-Host "Checksum: $zip.sha256"
+
+if ($GitHubToken) {
+    Write-Host "Mengunggah ke GitHub Release v$version..." -ForegroundColor Cyan
+
+    $repoUrl = & git -C $repoRoot remote get-url origin 2>$null
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($repoUrl)) {
+        throw "Tidak bisa membaca remote origin di $repoRoot."
+    }
+
+    $repoUrl = $repoUrl.Trim()
+    if ($repoUrl -notmatch 'github\.com[:/](?<owner>[^/]+)/(?<repo>[^/]+?)(?:\.git)?$') {
+        throw "Remote origin bukan repositori GitHub: $repoUrl"
+    }
+
+    $owner = $Matches.owner
+    $repo = $Matches.repo
+    $tag = "v$version"
+    $api = "https://api.github.com/repos/$owner/$repo"
+    $headers = @{
+        Authorization = "Bearer $GitHubToken"
+        Accept = 'application/vnd.github+json'
+        'X-GitHub-Api-Version' = '2022-11-28'
+    }
+
+    try {
+        $release = Invoke-RestMethod -Uri "$api/releases/tags/$tag" -Headers $headers
+    } catch {
+        if ($_.Exception.Response.StatusCode.value__ -ne 404) { throw }
+
+        # Rilis belum ada: buat dari commit yang sedang dipakai, bukan dari
+        # ujung cabang default, supaya aset cocok dengan paket yang baru dibuat.
+        $head = (& git -C $repoRoot rev-parse HEAD).Trim()
+        $body = @{
+            tag_name = $tag
+            target_commitish = $head
+            name = "Dynamic Island $version"
+            draft = $false
+            prerelease = $version -match '-'
+        } | ConvertTo-Json
+        Write-Host "Rilis $tag belum ada; dibuat dari commit $head." -ForegroundColor DarkGray
+        $release = Invoke-RestMethod -Uri "$api/releases" -Headers $headers -Method Post -Body $body -ContentType 'application/json'
+    }
+
+    try {
+        foreach ($filePath in @($zip, "$zip.sha256")) {
+            $fileName = [System.IO.Path]::GetFileName($filePath)
+
+            # GitHub menolak nama aset ganda (422), jadi aset lama dihapus dulu.
+            foreach ($asset in @($release.assets) | Where-Object { $_.name -eq $fileName }) {
+                Invoke-RestMethod -Uri "$api/releases/assets/$($asset.id)" -Headers $headers -Method Delete
+                Write-Host "Aset lama $fileName dihapus." -ForegroundColor DarkGray
+            }
+
+            $contentType = if ($fileName.EndsWith('.zip')) { 'application/zip' } else { 'text/plain' }
+            $uploadUrl = $release.upload_url -replace '\{\?name,label\}', "?name=$fileName"
+            $uploaded = Invoke-RestMethod -Uri $uploadUrl -Headers $headers -Method Post -ContentType $contentType -InFile $filePath
+            Write-Host "Terunggah: $($uploaded.browser_download_url)" -ForegroundColor Green
+        }
+    } catch {
+        throw "Gagal mengunggah ke GitHub Release $tag`: $($_.Exception.Message). Berkas lokal tetap ada di $dist."
+    }
+}
+
 if (-not $SelfContained) {
     Write-Host 'Paket ini butuh .NET 8 Desktop Runtime di mesin tujuan.' -ForegroundColor DarkGray
 }

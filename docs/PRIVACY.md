@@ -36,6 +36,8 @@ dinyalakan.
 | `commands.json` | nama, program, argumen perintah pilihan pengguna | `%APPDATA%\DynamicIsland` |
 | `plugins\*\plugin.json` | manifest dan izin plugin pilihan pengguna | `%APPDATA%\DynamicIsland` |
 | `capture-*.png` | tangkapan layar yang diminta pengguna | `Pictures\DynamicIsland` |
+| `island-hook.ps1` / `island-hook.cmd` | skrip relay Claude Code, hanya bila hook dipasang dari Pengaturan | `%APPDATA%\DynamicIsland` |
+| `~/.claude/settings.json` | hanya entri hook `island-hook` (cadangan `.bak` bertanggal dibuat dulu) | folder pengguna |
 
 Tidak ada isi notifikasi, teks yang diketik, audio mikrofon, gambar kamera, atau
 isi clipboard yang ditulis ke disk oleh versi ini. Kunci API asisten tidak
@@ -54,6 +56,7 @@ ditulis ke disk.
 | Asisten AI | HTTPS ke endpoint pilihan + kunci Bearer | hanya saat Kirim | pesan galat di jendela |
 | Tangkapan layar | GDI+ layar | saat perintah dipilih | alasan tampil di kapsul |
 | Plugin lokal | muat assembly di folder pengguna | saat saklar dinyalakan | plugin dilewati, log mencatat |
+| Hook Claude Code | tulis `~/.claude/settings.json` + skrip relay | hanya saat tombol **Pasang Hook** ditekan | pesan galat di Pengaturan, hook lama tidak berubah |
 
 Tidak ada: hak admin, aksesibilitas, rekaman layar, hook keyboard/mouse, atau
 instalasi driver. Jaringan hanya untuk ticker dan asisten, keduanya mati bawaan.

@@ -86,6 +86,8 @@ I/O) berjalan di thread lain dan hasilnya dikembalikan lewat
 | `%APPDATA%\DynamicIsland\app-profiles.json` | posisi/opacity terakhir per aplikasi (bisa dialihkan `ISLAND_APP_PROFILES`) |
 | `%APPDATA%\DynamicIsland\agent-status.json` | status agen lokal yang ditulis alat pengguna |
 | `%APPDATA%\DynamicIsland\agent-response.json` | jawaban setuju/tolak untuk alat agen |
+| `%APPDATA%\DynamicIsland\island-hook.ps1` / `.cmd` | skrip relay hook Claude Code (dipasang dari Pengaturan) |
+| `~/.claude/settings.json` | entri hook `island-hook` untuk Claude Code (cadangan `.bak` dibuat dulu) |
 | `%APPDATA%\DynamicIsland\commands.json` | perintah terminal yang didaftarkan pengguna |
 | `%APPDATA%\DynamicIsland\plugins\*\plugin.json` | manifest plugin dan izin yang diminta |
 | `Pictures\DynamicIsland\*.png` | hasil tangkapan layar |

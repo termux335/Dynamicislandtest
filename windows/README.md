@@ -67,6 +67,11 @@ powershell -ExecutionPolicy Bypass -File windows\Scripts\release.ps1
 powershell -ExecutionPolicy Bypass -File windows\Scripts\release.ps1 -SelfContained
 ```
 
+Tambahkan `-GitHubToken $env:GITHUB_TOKEN` untuk langsung mengunggah zip dan
+checksum ke GitHub Release `v<versi>` (token perlu izin **Contents: write**).
+Rilis dibuat dari commit yang sedang dipakai bila belum ada, dan aset dengan
+nama sama diganti, jadi skrip boleh dijalankan ulang.
+
 Kapsul langsung muncul dalam bentuk idle (titik oranye kecil). App berjalan tanpa
 ikon Dock/taskbar. Klik kanan kapsul untuk menu **Mode tampilan**, **Dua
 kapsul**, **Penempatan otomatis**, **Aksi cepat**, **Timer**, **Shelf berkas**,
@@ -243,12 +248,29 @@ sensitif mati secara bawaan; tidak ada kegagalan yang didiamkan.
 
 | Modul | Saklar | Perilaku |
 |---|---|---|
-| Status agen AI | Pengaturan (mati bawaan) | Membaca `%APPDATA%\DynamicIsland\agent-status.json` tiap 2 detik: alat, state, token terpakai, dan permintaan izin. **Setujui/Tolak** menulis `agent-response.json` di folder yang sama. Tanpa kunci API dan tanpa internet |
+| Status agen AI | Pengaturan (mati bawaan) | Membaca `%APPDATA%\DynamicIsland\agent-status.json` tiap 2 detik: alat, state, token terpakai, dan permintaan izin. **Setujui/Tolak** menulis `agent-response.json` di folder yang sama. Tanpa kunci API dan tanpa internet. Hook Claude Code bisa dipasang dari Pengaturan (lihat di bawah) |
 | Terminal cepat | Pengaturan + `commands.json` | Hanya perintah yang didaftarkan pengguna; dijalankan dari palette setelah konfirmasi. Tidak ada eksekusi dari sumber luar |
 | Tangkapan layar | Pengaturan (bawaan aktif) | Palette → **Tangkapan layar cepat** menyimpan PNG ke `Pictures\DynamicIsland`. Rekaman layar belum ada |
 | Ticker RSS | Pengaturan + URL (mati bawaan) | Judul dan tautan saja, diperbarui tiap 15 menit; kegagalan jaringan tampil di kapsul |
 | Asisten AI | Pengaturan (mati bawaan) | Jendela OpenAI-compatible; kunci API hanya di memori dan tidak disimpan. Tidak ada yang dikirim sebelum **Kirim** |
 | Plugin lokal | Pengaturan (mati bawaan) | Hanya `plugin.json` di `%APPDATA%\DynamicIsland\plugins` dengan izin `activity.show`/`ui.notify`. Plugin berjalan di proses ini; hanya pasang yang dipercaya |
+
+### Integrasi Claude Code (hook relay)
+
+Modul Status agen AI bisa menerima event langsung dari Claude Code tanpa menulis
+berkas status manual. Buka **Pengaturan → Status agen AI**, nyalakan saklarnya,
+lalu tekan **Pasang Hook Claude Code**. App menulis
+`%APPDATA%\DynamicIsland\island-hook.ps1` + `island-hook.cmd`, menambahkan entri
+hook ke `~/.claude/settings.json` (cadangan `.bak` bertanggal dibuat lebih dulu),
+dan **Lepas Hook Claude Code** menghapus hanya entri milik `island-hook` tanpa
+menyentuh hook lain.
+
+Event yang diteruskan: `UserPromptSubmit` (bekerja), `PreToolUse` (nama alat),
+`PermissionRequest` (kartu izin), dan `SessionEnd` (idle). Saat kartu izin
+muncul, hook menunggu jawaban **Setujui/Tolak** paling lama 25 detik; bila tidak
+ada jawaban, hook mengembalikan `ask` supaya prompt izin normal Claude Code
+tetap muncul. **Uji Kartu Izin** menulis satu permintaan palsu agar kartu bisa
+dicoba tanpa menjalankan Claude Code.
 
 ### Uji manual Tahap 5c
 
@@ -261,6 +283,7 @@ $agent = "$env:APPDATA\DynamicIsland\agent-status.json"
 '[{"Name":"Build","FileName":"dotnet","Arguments":"build","Confirm":true}]' | Set-Content "$env:APPDATA\DynamicIsland\commands.json"
 ```
 
+- **Pengaturan → Status agen AI → Uji Kartu Izin** → kartu izin muncul di kapsul; **Setujui** menulis `agent-response.json` berisi `"approved": true`, dan kartu hilang.
 - **Ctrl+Alt+V** → `Build` → konfirmasi Ya → `dotnet build` berjalan tanpa shell.
 - **Ctrl+Alt+V** → `Tangkapan layar cepat` → PNG muncul di Pictures dan kapsul memberi umpan balik.
 - Nyalakan **Ticker RSS**, isi URL feed, tunggu ≤ 15 menit (atau mulai ulang app) → judul berputar tiap 8 detik.
@@ -277,7 +300,7 @@ $agent = "$env:APPDATA\DynamicIsland\agent-status.json"
 ### Batasan Tahap 5c
 
 - Rekaman layar belum diimplementasikan; hanya tangkapan layar.
-- Status agen bergantung pada alat yang menulis `agent-status.json`; belum ada integrasi langsung ke Claude Code.
+- Relay hook hanya untuk Claude Code; alat agen lain harus menulis `agent-status.json` sendiri. Hook butuh PowerShell dan baru aktif saat sesi Claude Code berikutnya.
 - Ticker hanya RSS/Atom, bukan kurs atau harga khusus.
 - Plugin berjalan dengan kepercayaan penuh setelah manifest lolos; toko tema/komunitas tetap ditunda.
 
@@ -454,8 +477,10 @@ Untuk penempatan adaptif, app hanya membaca nama proses dan kotak window yang
 sedang fokus lewat `GetForegroundWindow`/`GetWindowRect` (tanpa hook keyboard
 atau mouse, tanpa hak admin), sekali per detik. Now Playing dibaca lewat API
 Windows `SystemMediaTransportControls` untuk pemutar yang sedang aktif; app
-tidak merekam audio. Satu-satunya berkas yang ditulis app adalah pengaturan di
-`%APPDATA%\DynamicIsland\settings.json`.
+tidak merekam audio. Berkas yang ditulis app hanya di `%APPDATA%\DynamicIsland`
+(pengaturan, `agent-response.json`, `commands.json`, `notes.json`, skrip hook)
+dan, bila hook dipasang, satu entri `island-hook` di `~/.claude/settings.json`
+beserta cadangan `.bak`-nya.
 
 ## Isi folder
 
